@@ -41,16 +41,16 @@ uint32_t score = 0;
 
 const Color colours[] =
 {
-    { .r = 0x04, .g = 0x0c, .b = 0x06, .a = 0xff }, // #040c06
-    { .r = 0x11, .g = 0x23, .b = 0x18, .a = 0xff }, // #112318
-    { .r = 0x1e, .g = 0x1e, .b = 0x29, .a = 0xff }, // #1e1e29
-    { .r = 0x30, .g = 0x30, .b = 0x42, .a = 0xff }, // #303042
-    { .r = 0x4d, .g = 0x4d, .b = 0x61, .a = 0xff }, // #4d4d61
-    { .r = 0x89, .g = 0x89, .b = 0x57, .a = 0xff }, // #898957
-    { .r = 0xbe, .g = 0xbe, .b = 0x7f, .a = 0xff }, // #bebe7f
-    { .r = 0xee, .g = 0xee, .b = 0xcc, .a = 0xff }, // #eeffcc
-    { .r = 0xe3, .g = 0xe3, .b = 0x4c, .a = 0xff }, // #e3e34c
-    { .r = 0x45, .g = 0x45, .b = 0xa9, .a = 0xff }, // #4545a9
+    { .r = 0x04, .g = 0x0c, .b = 0x06, .a = 0xff }, // #040c06 0
+    { .r = 0x11, .g = 0x23, .b = 0x18, .a = 0xff }, // #112318 1
+    { .r = 0x1e, .g = 0x1e, .b = 0x29, .a = 0xff }, // #1e1e29 2
+    { .r = 0x30, .g = 0x30, .b = 0x42, .a = 0xff }, // #303042 3
+    { .r = 0x4d, .g = 0x4d, .b = 0x61, .a = 0xff }, // #4d4d61 4
+    { .r = 0x89, .g = 0x89, .b = 0x57, .a = 0xff }, // #898957 5
+    { .r = 0xbe, .g = 0xbe, .b = 0x7f, .a = 0xff }, // #bebe7f 6
+    { .r = 0xee, .g = 0xee, .b = 0xcc, .a = 0xff }, // #eeffcc 7
+    { .r = 0xe3, .g = 0xe3, .b = 0x4c, .a = 0xff }, // #e3e34c 8
+    { .r = 0x45, .g = 0x45, .b = 0xa9, .a = 0xff }, // #4545a9 9
 };
 
 const uint16_t tile_size = 16u;
@@ -88,6 +88,22 @@ const char *world = "##################################################"
 int main(void)
 {
     InitWindow(screenWidth, screenHeight, "Banroks Adventure");
+
+    ToggleFullscreen();
+
+    float window_scale_height = (float)GetScreenHeight() / screenHeight;
+    float window_scale_width  = (float)GetScreenWidth()  / screenWidth;
+
+    if (window_scale_height > window_scale_width)
+    {
+        window_scale_height = (float)((int)window_scale_width);
+        window_scale_width = window_scale_height;
+    }
+    else
+    {
+        window_scale_width = (float)((int)window_scale_height);
+        window_scale_height = window_scale_width;
+    }
 
     SetTargetFPS(30);               // Set our game to run at 30 frames-per-second for that retro lifestyle
 
@@ -266,15 +282,15 @@ int main(void)
                     char tile = world[x + y * world_width];
                     if ('#' == tile) // wall
                     {
-                        DrawRectangle(x * tile_size, y * tile_size, tile_size, tile_size, colours[0]);
+                        DrawRectangle(x * tile_size * window_scale_width, y * tile_size * window_scale_height, tile_size * window_scale_width, tile_size * window_scale_height, colours[0]);
                     }
                     else if ('X' == tile) // exit
                     {
-                        DrawRectangle(x * tile_size, y * tile_size, tile_size, tile_size, colours[5]);
+                        DrawRectangle(x * tile_size * window_scale_width, y * tile_size * window_scale_height, tile_size * window_scale_width, tile_size * window_scale_height, colours[5]);
                     }
                     else // floor
                     {
-                        DrawRectangle(x * tile_size, y * tile_size, tile_size, tile_size, colours[3]);
+                        DrawRectangle(x * tile_size * window_scale_width, y * tile_size * window_scale_height, tile_size * window_scale_width, tile_size * window_scale_height, colours[3]);
                     }
                     
                     if (!start_processed)
@@ -333,11 +349,12 @@ int main(void)
                     if (!key_assigned)
                     {
                         chest.containsKey = true;
+                        key_assigned = true;
                     }
 
                     if(!chest.opened)
                     {
-                        DrawRectangle(chest.x * tile_size, chest.y * tile_size, tile_size, tile_size, colours[9]);
+                        DrawRectangle(chest.x * tile_size * window_scale_width, chest.y * tile_size * window_scale_height, tile_size * window_scale_width, tile_size * window_scale_height, colours[9]);
                     }
                 }
 
@@ -346,23 +363,22 @@ int main(void)
                 {
                     if (enemy.isAlive)
                     {
-                        DrawRectangle(enemy.x * tile_size, enemy.y * tile_size, tile_size, tile_size, colours[8]);
+                        DrawRectangle(enemy.x * tile_size * window_scale_width, enemy.y * tile_size * window_scale_height, tile_size * window_scale_width, tile_size * window_scale_height, colours[8]);
                     }
                     
                     enemy_idx++;
                 }
 
-                DrawRectangle(player.x * tile_size, player.y * tile_size, tile_size, tile_size, player.hasKey ? colours[7] : RED);
+                DrawRectangle(player.x * tile_size * window_scale_width, player.y * tile_size * window_scale_height, tile_size * window_scale_width, tile_size * window_scale_height, player.hasKey ? colours[7] : RED);
             }
 
             char score_str[21] = "";
             sprintf(score_str, "SCORE : %u", score);
-            DrawText(score_str, 2, 2, 16, WHITE);
+            DrawText(score_str, 2 * window_scale_width, 2 * window_scale_height, 12 * window_scale_height, colours[7]);
             
             char health_str[21] = "";
             sprintf(health_str, "HEALTH : %u", player.health);
-            DrawText(health_str, 200, 2, 16, WHITE);
-            
+            DrawText(health_str, 200 * window_scale_width, 2 * window_scale_height, 12 * window_scale_height, colours[7]);
 
         EndDrawing();
     }
