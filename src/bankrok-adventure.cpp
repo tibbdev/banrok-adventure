@@ -10,6 +10,10 @@
 const int screenWidth = 800;
 const int screenHeight = 480;
 
+const uint16_t MIN_SECTION_SIZE_TILES   = 12;
+const uint16_t MIN_ROOM_DIMENSION_TILES = 7;
+const uint16_t MIN_ROOM_BORDER_TILES    = 1;
+
 struct Player
 {
     uint16_t x      = 0;
@@ -122,29 +126,17 @@ int main(void)
 
     ToggleFullscreen();
 
-    float window_scale_height = (float)GetScreenHeight() / screenHeight;
-    float window_scale_width  = (float)GetScreenWidth()  / screenWidth;
-
-    if (window_scale_height > window_scale_width)
-    {
-        window_scale_height = (float)((int)window_scale_width);
-        window_scale_width = window_scale_height;
-    }
-    else
-    {
-        window_scale_width = (float)((int)window_scale_height);
-        window_scale_height = window_scale_width;
-    }
-
+    float window_scale = (float)2.0;
+    
     SetTargetFPS(30);               // Set our game to run at 30 frames-per-second for that retro lifestyle
 
-    uint16_t world_width  = screenWidth / tile_size;
-    uint16_t world_height = screenHeight / tile_size;
+    uint16_t world_width  = GetScreenWidth() / (tile_size * window_scale);
+    uint16_t world_height = GetScreenWidth() / (tile_size * window_scale);
 
     bool start_processed = false;
     bool running         = true;
-
-    bool key_assigned = false;
+    bool fog_of_war      = false;
+    bool key_assigned    = false;
     
     uint64_t last_attack_attempt = (uint64_t)GetTime();
 
@@ -157,6 +149,11 @@ int main(void)
                 running = false;
                 continue;
             }
+        }
+
+        if (IsKeyPressed(KEY_F))
+        {
+            fog_of_war = !fog_of_war;
         }
 
         // Update
@@ -340,15 +337,15 @@ int main(void)
                     char tile = world[x + y * world_width];
                     if ('#' == tile) // wall
                     {
-                        DrawRectangle(x * tile_size * window_scale_width, y * tile_size * window_scale_height, tile_size * window_scale_width, tile_size * window_scale_height, colours[0]);
+                        DrawRectangle(x * tile_size * window_scale, y * tile_size * window_scale, tile_size * window_scale, tile_size * window_scale, colours[0]);
                     }
                     else if ('X' == tile) // exit
                     {
-                        DrawRectangle(x * tile_size * window_scale_width, y * tile_size * window_scale_height, tile_size * window_scale_width, tile_size * window_scale_height, colours[5]);
+                        DrawRectangle(x * tile_size * window_scale, y * tile_size * window_scale, tile_size * window_scale, tile_size * window_scale, colours[5]);
                     }
                     else // floor
                     {
-                        DrawRectangle(x * tile_size * window_scale_width, y * tile_size * window_scale_height, tile_size * window_scale_width, tile_size * window_scale_height, colours[3]);
+                        DrawRectangle(x * tile_size * window_scale, y * tile_size * window_scale, tile_size * window_scale, tile_size * window_scale, colours[3]);
                     }
                     
                     if (!start_processed)
@@ -406,7 +403,7 @@ int main(void)
                 {
                     if(!chest.opened)
                     {
-                        DrawRectangle(chest.x * tile_size * window_scale_width, chest.y * tile_size * window_scale_height, tile_size * window_scale_width, tile_size * window_scale_height, colours[9]);
+                        DrawRectangle(chest.x * tile_size * window_scale, chest.y * tile_size * window_scale, tile_size * window_scale, tile_size * window_scale, colours[9]);
                     }
                 }
 
@@ -415,34 +412,37 @@ int main(void)
                 {
                     if (enemy.isAlive)
                     {
-                        DrawRectangle(enemy.x * tile_size * window_scale_width, enemy.y * tile_size * window_scale_height, tile_size * window_scale_width, tile_size * window_scale_height, colours[8]);
+                        DrawRectangle(enemy.x * tile_size * window_scale, enemy.y * tile_size * window_scale, tile_size * window_scale, tile_size * window_scale, colours[8]);
                     }
                     
                     enemy_idx++;
                 }
 
-                DrawRectangle(player.x * tile_size * window_scale_width, player.y * tile_size * window_scale_height, tile_size * window_scale_width, tile_size * window_scale_height, player.hasKey ? colours[7] : RED);
+                DrawRectangle(player.x * tile_size * window_scale, player.y * tile_size * window_scale, tile_size * window_scale, tile_size * window_scale, player.hasKey ? colours[7] : RED);
             }
             
-            for (size_t y = 0; y < world_height; y++)
+            if (fog_of_war)
             {
-                for (size_t x = 0; x < world_width; x++)
+                for (size_t y = 0; y < world_height; y++)
                 {
-                    char tile = hiddn[x + y * world_width];
-                    if ('H' == tile) // hidden
+                    for (size_t x = 0; x < world_width; x++)
                     {
-                        DrawRectangle(x * tile_size * window_scale_width, y * tile_size * window_scale_height, tile_size * window_scale_width, tile_size * window_scale_height, colours[1]);
+                        char tile = hiddn[x + y * world_width];
+                        if ('H' == tile) // hidden
+                        {
+                            DrawRectangle(x * tile_size * window_scale, y * tile_size * window_scale, tile_size * window_scale, tile_size * window_scale, colours[1]);
+                        }
                     }
                 }
             }
 
             char score_str[21] = "";
             sprintf(score_str, "SCORE : %u", score);
-            DrawText(score_str, 2 * window_scale_width, 2 * window_scale_height, 12 * window_scale_height, colours[7]);
+            DrawText(score_str, 2 * window_scale, 2 * window_scale, 12 * window_scale, colours[7]);
             
             char health_str[21] = "";
             sprintf(health_str, "HEALTH : %u", player.health);
-            DrawText(health_str, 200 * window_scale_width, 2 * window_scale_height, 12 * window_scale_height, colours[7]);
+            DrawText(health_str, 200 * window_scale, 2 * window_scale, 12 * window_scale, colours[7]);
 
         EndDrawing();
     }
