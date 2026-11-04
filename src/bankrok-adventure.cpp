@@ -23,7 +23,7 @@ struct Chest
 {
     uint16_t x           = 0;
     uint16_t y           = 0;
-    bool     containsKey = true;
+    bool     containsKey = false;
     bool     opened      = false;
 };
 
@@ -69,11 +69,11 @@ const char *world = "##################################################"
                     "#####..............########......................#"
                     "#####..............########......................#"
                     "#####..............########......................#"
-                    "#####C.............###################.###########"
-                    "#####..............###################.###########"
-                    "#####..............###################.###########"
+                    "#####C.............##################..###########"
+                    "#####..............##################..###########"
+                    "#####..............##################..###########"
                     "#####..................................###########"
-                    "#####..............###################.###########"
+                    "#####..................................###########"
                     "######################################.###########"
                     "######################################.###########"
                     "##.............#########......................####"
@@ -320,16 +320,6 @@ int main(void)
                             fresh_chest.x = x;
                             fresh_chest.y = y;
 
-                            if (!key_assigned)
-                            {
-                                int rng = std::rand();
-                                if (rng % 2)
-                                {
-                                    fresh_chest.containsKey = true;
-                                    key_assigned = true;
-                                }
-                            }
-
                             printf("chest at {%u, %u} : ", x, y);
 
                             chests.push_back(fresh_chest);
@@ -339,6 +329,16 @@ int main(void)
                     }
                 }
             }
+
+            if (!key_assigned)
+            {
+                key_assigned = true;
+                if (0 != chests.size())
+                {
+                    uint16_t key_idx = std::rand() % chests.size();
+                    chests[key_idx].containsKey = true;
+                }
+            }
             
             start_processed = true;
 
@@ -346,12 +346,6 @@ int main(void)
             {
                 for (Chest &chest : chests)
                 {
-                    if (!key_assigned)
-                    {
-                        chest.containsKey = true;
-                        key_assigned = true;
-                    }
-
                     if(!chest.opened)
                     {
                         DrawRectangle(chest.x * tile_size * window_scale_width, chest.y * tile_size * window_scale_height, tile_size * window_scale_width, tile_size * window_scale_height, colours[9]);
