@@ -16,7 +16,7 @@ struct Player
     uint16_t y      = 0;
     uint16_t health = 100;
     bool     alive  = true;
-    bool     hasKey = true;
+    bool     hasKey = false;
 } player;
 
 struct Chest
@@ -224,21 +224,16 @@ int main(void)
         
             if ((enemy_within_range != enemies.size()) && (0 != enemies.size()))
             {
-                printf("within range\r\n");
                 if (0 == rand() % 15)
                 {
-                    printf("@Enemy attacks");
                     if (last_attack_attempt != (uint64_t)GetTime())
                     {
-                        printf(" : OW");
                         player.health -= 10;
                     }
-                    printf("\r\n");
                 }
 
                 if (IsKeyPressed(KEY_SPACE))
                 {
-                    printf("Player attacks");
                     enemies[enemy_within_range].isAlive = false;
                     score += 100;
                 }
@@ -250,7 +245,6 @@ int main(void)
                 {
                     if (IsKeyPressed(KEY_SPACE) && !chest.opened)
                     {
-                        printf("@opening chest\r\n");
                         chest.opened = true;
 
                         player.hasKey |= chest.containsKey;
@@ -350,18 +344,24 @@ int main(void)
                 uint8_t enemy_idx = 0;
                 for(Enemy &enemy : enemies)
                 {
-                    char str[21] = {'A' + enemy_idx, '\0'};
                     if (enemy.isAlive)
                     {
                         DrawRectangle(enemy.x * tile_size, enemy.y * tile_size, tile_size, tile_size, colours[8]);
                     }
-                    DrawText(str, enemy.x * tile_size, enemy.y * tile_size, tile_size, BLACK);
                     
                     enemy_idx++;
                 }
-                
+
                 DrawRectangle(player.x * tile_size, player.y * tile_size, tile_size, tile_size, player.hasKey ? colours[7] : RED);
             }
+
+            char score_str[21] = "";
+            sprintf(score_str, "SCORE : %u", score);
+            DrawText(score_str, 2, 2, 16, WHITE);
+            
+            char health_str[21] = "";
+            sprintf(health_str, "HEALTH : %u", player.health);
+            DrawText(health_str, 200, 2, 16, WHITE);
             
 
         EndDrawing();
