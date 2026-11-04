@@ -77,13 +77,44 @@ const char *world = "##################################################"
                     "######################################.###########"
                     "######################################.###########"
                     "##.............#########......................####"
-                    "##......E......#########......................####"
+                    "##.......E.....#########......................####"
                     "##.............#########.................C....####"
                     "##............................................####"
-                    "##X.....E......#########......................####"
-                    "##.............#########......................####"
+                    "##X............#########......................####"
+                    "##.....E.......#########......................####"
                     "##.............#########..E...................####"
                     "##################################################";
+
+char hiddn[] = "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH"
+                    "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH"
+                    "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH"
+                    "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH"
+                    "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH"
+                    "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH"
+                    "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH"
+                    "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH"
+                    "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH"
+                    "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH"
+                    "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH"
+                    "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH"
+                    "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH"
+                    "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH"
+                    "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH"
+                    "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH"
+                    "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH"
+                    "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH"
+                    "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH"
+                    "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH"
+                    "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH"
+                    "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH"
+                    "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH"
+                    "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH"
+                    "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH"
+                    "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH"
+                    "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH"
+                    "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH"
+                    "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH"
+                    "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH";
 
 int main(void)
 {
@@ -270,6 +301,33 @@ int main(void)
             }
         }
 
+        for (int16_t y_off = -6; y_off <= 6; y_off++)
+        {
+            int32_t y = player.y + y_off;
+
+            if ((0 >= y) | (world_height < y))
+            {
+                continue;
+            }
+            
+            for (int16_t x_off = -6; x_off <= 6; x_off++)
+            {
+                int32_t x = player.x + x_off;
+
+                if ((0 >= x) | (world_width < x))
+                {
+                    continue;
+                }
+
+                int16_t distance = (x_off * x_off) + (y_off * y_off);
+
+                if (40 > distance)
+                {
+                    hiddn[player.x + x_off + (player.y + y_off)*world_width] = ' ';
+                }
+            }
+        }
+        
         // Draw
         BeginDrawing();
 
@@ -364,6 +422,18 @@ int main(void)
                 }
 
                 DrawRectangle(player.x * tile_size * window_scale_width, player.y * tile_size * window_scale_height, tile_size * window_scale_width, tile_size * window_scale_height, player.hasKey ? colours[7] : RED);
+            }
+            
+            for (size_t y = 0; y < world_height; y++)
+            {
+                for (size_t x = 0; x < world_width; x++)
+                {
+                    char tile = hiddn[x + y * world_width];
+                    if ('H' == tile) // hidden
+                    {
+                        DrawRectangle(x * tile_size * window_scale_width, y * tile_size * window_scale_height, tile_size * window_scale_width, tile_size * window_scale_height, colours[1]);
+                    }
+                }
             }
 
             char score_str[21] = "";
