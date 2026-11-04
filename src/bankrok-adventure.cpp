@@ -213,13 +213,13 @@ int main(void)
 
             for (Enemy &enemy : enemies) // double check for enemies in this location
             {
-                enemy_idx++;
                 if (((((player.x + 1) == enemy.x) || ((player.x - 1) == enemy.x)) && (enemy.isAlive) && (player.y == enemy.y)) ||
                     ((((player.y + 1) == enemy.y) || ((player.y - 1) == enemy.y)) && (enemy.isAlive) && (player.x == enemy.x)))
                 {
                     enemy_within_range = enemy_idx;
                     break;
                 }
+                enemy_idx++;
             }
         
             if ((enemy_within_range != enemies.size()) && (0 != enemies.size()))
@@ -347,18 +347,22 @@ int main(void)
                     }
                 }
 
+                uint8_t enemy_idx = 0;
                 for(Enemy &enemy : enemies)
                 {
+                    char str[21] = {'A' + enemy_idx, '\0'};
                     if (enemy.isAlive)
                     {
                         DrawRectangle(enemy.x * tile_size, enemy.y * tile_size, tile_size, tile_size, colours[8]);
                     }
+                    DrawText(str, enemy.x * tile_size, enemy.y * tile_size, tile_size, BLACK);
+                    
+                    enemy_idx++;
                 }
                 
                 DrawRectangle(player.x * tile_size, player.y * tile_size, tile_size, tile_size, player.hasKey ? colours[7] : RED);
             }
             
-            // DrawText("Congrats! You created your first window!", 190, 200, 20, colours[7]);
 
         EndDrawing();
     }
