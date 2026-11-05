@@ -21,7 +21,16 @@ struct Player
     uint16_t health = 100;
     bool     alive  = true;
     bool     hasKey = false;
-} player;
+
+    void     reset(void)
+    {
+        x      = 0;
+        y      = 0;
+        health = 100;
+        alive  = true;
+        hasKey = false;
+    }
+};
 
 struct Chest
 {
@@ -29,6 +38,14 @@ struct Chest
     uint16_t y           = 0;
     bool     containsKey = false;
     bool     opened      = false;
+
+    void     reset(void)
+    {
+        x           = 0;
+        y           = 0;
+        containsKey = false;
+        opened      = false;
+    }
 };
 
 struct Enemy
@@ -36,12 +53,14 @@ struct Enemy
     uint16_t x       = 0;
     uint16_t y       = 0;
     bool     isAlive = true;
+
+    void     reset(void)
+    {
+        x       = 0;
+        y       = 0;
+        isAlive = true;
+    }
 };
-
-std::vector<Chest> chests;
-std::vector<Enemy> enemies;
-
-uint32_t score = 0;
 
 const Color colours[] =
 {
@@ -120,8 +139,110 @@ char hiddn[] = "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH"
                     "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH"
                     "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH";
 
+void handle_player_movement(Player &player, std::vector<Enemy> &enemies, std::vector<Chest> &chests, uint16_t world_width)
+{
+    if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP))
+    {
+        uint16_t check_idx = (player.y - 1) * world_width + player.x;
+
+        if ('#' != world[check_idx]) // if it's not a wall you might be able to move
+        {
+            bool enemy_blocking = false;
+
+            for (Enemy enemy : enemies) // double check for enemies in this location
+            {
+                if (((player.y - 1) == enemy.y) && (enemy.isAlive) && (player.x == enemy.x))
+                {
+                    enemy_blocking = true;
+
+                    break;
+                }
+            }
+
+            if (!enemy_blocking)
+            {
+                player.y--;
+            }
+        }
+    }
+    if (IsKeyPressed(KEY_S) || IsKeyPressed(KEY_DOWN))
+    {
+        if ('#' != world[(player.y + 1) * world_width + player.x])
+        {
+            bool enemy_blocking = false;
+
+            for (Enemy enemy : enemies) // double check for enemies in this location
+            {
+                if (((player.y + 1) == enemy.y) && (enemy.isAlive) && (player.x == enemy.x))
+                {
+                    enemy_blocking = true;
+
+                    break;
+                }
+            }
+
+            if (!enemy_blocking)
+            {
+                player.y++;
+            }
+        }
+    }
+    
+    if (IsKeyPressed(KEY_A) || IsKeyPressed(KEY_LEFT))
+    {
+        if ('#' != world[player.y * world_width + (player.x - 1)])
+        {
+            bool enemy_blocking = false;
+            uint16_t enemy_idx = 0;
+
+            for (Enemy enemy : enemies) // double check for enemies in this location
+            {
+                enemy_idx++;
+                if (((player.x - 1) == enemy.x) && (enemy.isAlive) && (player.y == enemy.y))
+                {
+                    enemy_blocking = true;
+                    break;
+                }
+            }
+
+            if (!enemy_blocking)
+            {
+                player.x--;
+            }
+        }
+    }
+    if (IsKeyPressed(KEY_D) || IsKeyPressed(KEY_RIGHT))
+    {
+        if ('#' != world[player.y * world_width + (player.x + 1)])
+        {
+            bool enemy_blocking = false;
+
+            for (Enemy enemy : enemies) // double check for enemies in this location
+            {
+                if (((player.x + 1) == enemy.x) && (enemy.isAlive) && (player.y == enemy.y))
+                {
+                    enemy_blocking = true;
+                    break;
+                }
+            }
+
+            if (!enemy_blocking)
+            {
+                player.x++;
+            }
+        }
+    }
+}
+
 int main(void)
 {
+    // Setup
+    uint32_t score = 0;
+
+    Player             player;
+    std::vector<Chest> chests;
+    std::vector<Enemy> enemies;
+
     InitWindow(screenWidth, screenHeight, "Banroks Adventure");
 
     ToggleFullscreen();
@@ -130,8 +251,8 @@ int main(void)
     
     SetTargetFPS(30);               // Set our game to run at 30 frames-per-second for that retro lifestyle
 
-    uint16_t world_width  = GetScreenWidth() / (tile_size * window_scale);
-    uint16_t world_height = GetScreenWidth() / (tile_size * window_scale);
+    uint16_t world_width  = GetScreenWidth() / (tile_size);
+    uint16_t world_height = GetScreenWidth() / (tile_size);
 
     bool start_processed = false;
     bool running         = true;
@@ -140,9 +261,10 @@ int main(void)
     
     uint64_t last_attack_attempt = (uint64_t)GetTime();
 
+    // Enter Game Loop
     while (running && !WindowShouldClose())    // Detect window close button or ESC key
     {
-        if('X' == world[player.x + world_width * player.y])
+        if('X' == world[player.x + world_width * player.y]) // Is player at exit?
         {
             if (player.hasKey)
             {
@@ -151,7 +273,7 @@ int main(void)
             }
         }
 
-        if (IsKeyPressed(KEY_F))
+        if (IsKeyPressed(KEY_F)) // Toggle fog of war on/off
         {
             fog_of_war = !fog_of_war;
         }
@@ -159,100 +281,9 @@ int main(void)
         // Update
         if (start_processed)
         {
+            handle_player_movement(player, enemies, chests, world_width);
+
             int enemy_within_range = enemies.size();
-
-            if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP))
-            {
-                uint16_t check_idx = (player.y - 1) * world_width + player.x;
-
-                if ('#' != world[check_idx]) // if it's not a wall you might be able to move
-                {
-                    bool enemy_blocking = false;
-
-                    for (Enemy enemy : enemies) // double check for enemies in this location
-                    {
-                        if (((player.y - 1) == enemy.y) && (enemy.isAlive) && (player.x == enemy.x))
-                        {
-                            enemy_blocking = true;
-
-                            break;
-                        }
-                    }
-
-                    if (!enemy_blocking)
-                    {
-                        player.y--;
-                    }
-                }
-            }
-            if (IsKeyPressed(KEY_S) || IsKeyPressed(KEY_DOWN))
-            {
-                if ('#' != world[(player.y + 1) * world_width + player.x])
-                {
-                    bool enemy_blocking = false;
-
-                    for (Enemy enemy : enemies) // double check for enemies in this location
-                    {
-                        if (((player.y + 1) == enemy.y) && (enemy.isAlive) && (player.x == enemy.x))
-                        {
-                            enemy_blocking = true;
-
-                            break;
-                        }
-                    }
-
-                    if (!enemy_blocking)
-                    {
-                        player.y++;
-                    }
-                }
-            }
-            
-            if (IsKeyPressed(KEY_A) || IsKeyPressed(KEY_LEFT))
-            {
-                if ('#' != world[player.y * world_width + (player.x - 1)])
-                {
-                    bool enemy_blocking = false;
-                    uint16_t enemy_idx = 0;
-
-                    for (Enemy enemy : enemies) // double check for enemies in this location
-                    {
-                        enemy_idx++;
-                        if (((player.x - 1) == enemy.x) && (enemy.isAlive) && (player.y == enemy.y))
-                        {
-                            enemy_blocking = true;
-                            break;
-                        }
-                    }
-
-                    if (!enemy_blocking)
-                    {
-                        player.x--;
-                    }
-                }
-            }
-            if (IsKeyPressed(KEY_D) || IsKeyPressed(KEY_RIGHT))
-            {
-                if ('#' != world[player.y * world_width + (player.x + 1)])
-                {
-                    bool enemy_blocking = false;
-
-                    for (Enemy enemy : enemies) // double check for enemies in this location
-                    {
-                        if (((player.x + 1) == enemy.x) && (enemy.isAlive) && (player.y == enemy.y))
-                        {
-                            enemy_blocking = true;
-                            break;
-                        }
-                    }
-
-                    if (!enemy_blocking)
-                    {
-                        player.x++;
-                    }
-                }
-            }
-            
             uint16_t enemy_idx = 0;
 
             for (Enemy &enemy : enemies) // double check for enemies in this location
@@ -298,6 +329,7 @@ int main(void)
             }
         }
 
+        // process fog of war
         for (int16_t y_off = -6; y_off <= 6; y_off++)
         {
             int32_t y = player.y + y_off;
