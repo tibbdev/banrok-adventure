@@ -289,6 +289,11 @@ void handle_player_movement(Player &player, std::vector<Enemy> &enemies, std::ve
     }
 }
 
+void draw_tile_from_set(Texture2D tex, uint16_t tileid, uint16_t tilesize, uint16_t x_loc, uint16_t y_loc, float scale)
+{
+    // Do Nothing
+}
+
 int main(void)
 {
     // Setup
