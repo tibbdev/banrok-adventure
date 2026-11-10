@@ -4,6 +4,8 @@ project(banrok-adventure C CXX)
 set(CMAKE_C_STANDARD   17)
 set(CMAKE_CXX_STANDARD 20)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # Configure Static Runtime for MSVC globally before targets are defined
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
@@ -51,7 +53,7 @@ endif()
 
 target_sources(${PROJECT_NAME} PRIVATE ${GAME_SRCS})
 target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_INCLUDE})
-target_link_libraries(${PROJECT_NAME} PRIVATE raylib)
+target_link_libraries(${PROJECT_NAME} PUBLIC raylib)
 
 # Setting ASSETS_PATH
 target_compile_definitions(${PROJECT_NAME} PUBLIC ASSETS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/assets/")

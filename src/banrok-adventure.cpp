@@ -5,7 +5,10 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include <cstring>
+
 #include <vector>
+#include <array>
 
 const int screenWidth = 800;
 const int screenHeight = 480;
@@ -60,6 +63,44 @@ struct Enemy
         y       = 0;
         isAlive = true;
     }
+};
+
+struct Level
+{
+    uint16_t width       = 0;
+    uint16_t height      = 0;
+    char     tiles[4096] = {0};
+
+    void clear(void)
+    {
+        for (int i = 0; i < 4096; i++)
+        {
+            tiles[i] = '#'; // All Walls
+        }
+
+        width       = 0;
+        height      = 0;
+    }
+
+    void load(char * data, uint16_t lvl_width, uint16_t lvl_height)
+    {
+        if (data != NULL)
+        {
+            if (sizeof(tiles) > (lvl_width * lvl_height))
+            {
+                memset(tiles, 0, sizeof(tiles));
+                
+                for (uint16_t row = 0; row < lvl_height; row++)
+                {
+                    for (uint16_t col = 0; col < lvl_width; col++)
+                    {
+                        tiles[row * lvl_width + col] = data[row * lvl_width + col];
+                    }
+                }
+            }
+        }
+    }
+
 };
 
 const Color colours[] =
@@ -256,8 +297,16 @@ int main(void)
     Player             player;
     std::vector<Chest> chests;
     std::vector<Enemy> enemies;
+    Level              level;
 
     InitWindow(screenWidth, screenHeight, "Banroks Adventure");
+
+    Texture2D tex_tileset;
+
+    {
+        Image img = LoadImage(ASSETS_PATH "2DPixelDungeon/character and tileset/Dungeon_Tileset.png");
+        tex_tileset = LoadTextureFromImage(img);
+    }
 
     ToggleFullscreen();
 
