@@ -291,7 +291,30 @@ void handle_player_movement(Player &player, std::vector<Enemy> &enemies, std::ve
 
 void draw_tile_from_set(Texture2D tex, uint16_t tileid, uint16_t tilesize, uint16_t x_loc, uint16_t y_loc, float scale)
 {
-    // Do Nothing
+    if (IsTextureValid(tex))
+    {
+        const uint16_t tex_tiles_x = tex.width / tilesize;
+        const uint16_t tex_tiles_y = tex.height / tilesize;
+
+        if (tileid < (tex_tiles_x * tex_tiles_y)) // Make sure requested tileid is less that size of the texture
+        {
+            Rectangle src_rect;
+
+            src_rect.x      = (tileid % tex_tiles_x) * tilesize;
+            src_rect.y      = (tileid / tex_tiles_x) *tilesize;
+            src_rect.width  = tilesize;
+            src_rect.height = tilesize;
+
+            Rectangle dest_rect;
+
+            dest_rect.x      = scale * tile_size * x_loc;
+            dest_rect.y      = scale * tile_size * y_loc;
+            dest_rect.width  = scale * tilesize;
+            dest_rect.height = scale * tilesize;
+
+            DrawTexturePro(tex, src_rect, dest_rect, {0.0f, 0.0f}, 0.0f, WHITE);
+        }
+    }
 }
 
 int main(void)
@@ -440,15 +463,15 @@ int main(void)
                     char tile = world[x + y * world_width];
                     if ('#' == tile) // wall
                     {
-                        DrawRectangle(x * tile_size * window_scale, y * tile_size * window_scale, tile_size * window_scale, tile_size * window_scale, colours[0]);
+                        draw_tile_from_set(tex_tileset, 78, tile_size, x, y, 2.0f);
                     }
                     else if ('X' == tile) // exit
                     {
-                        DrawRectangle(x * tile_size * window_scale, y * tile_size * window_scale, tile_size * window_scale, tile_size * window_scale, colours[5]);
+                        draw_tile_from_set(tex_tileset, player.hasKey ? 39 : 38, tile_size, x, y, 2.0f);
                     }
                     else // floor
                     {
-                        DrawRectangle(x * tile_size * window_scale, y * tile_size * window_scale, tile_size * window_scale, tile_size * window_scale, colours[3]);
+                        draw_tile_from_set(tex_tileset, x % 2 ? 22 : 23, tile_size, x, y, 2.0f);
                     }
                     
                     if (!start_processed)
