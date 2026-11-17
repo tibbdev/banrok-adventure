@@ -65,21 +65,32 @@ struct Enemy
     }
 };
 
+struct Exit
+{
+    uint16_t x  = 0;
+    uint16_t y  = 0;
+    bool locked = true;
+};
+
 struct Level
 {
     uint16_t width       = 0;
     uint16_t height      = 0;
-    char     tiles[4096] = {0};
+    uint8_t  tiles[4096] = {0};
+    uint16_t walls[4096] = {0};
+    char     raw[4096]   = {0};
 
     void clear(void)
     {
-        for (int i = 0; i < 4096; i++)
+        for (int idx = 0; idx < 4096; idx++)
         {
-            tiles[i] = '#'; // All Walls
+            tiles[idx] = 78;  // All blank
+            raw[idx]   = '#';
+            walls[idx] = 0;
         }
 
-        width       = 0;
-        height      = 0;
+        width  = 0;
+        height = 0;
     }
 
     void load(char * data, uint16_t lvl_width, uint16_t lvl_height)
@@ -88,13 +99,219 @@ struct Level
         {
             if (sizeof(tiles) > (lvl_width * lvl_height))
             {
-                memset(tiles, 0, sizeof(tiles));
+                width  = lvl_width;
+                height = lvl_height;
+
+                memset(tiles, 78, sizeof(tiles));
+                memset(raw,   0,  sizeof(raw));
                 
                 for (uint16_t row = 0; row < lvl_height; row++)
                 {
                     for (uint16_t col = 0; col < lvl_width; col++)
                     {
-                        tiles[row * lvl_width + col] = data[row * lvl_width + col];
+                        uint16_t idx = row * lvl_width + col;
+                        
+                        raw[idx] = data[idx];
+                        
+                        walls[idx] = 0u;
+
+                        if (0 == row) // Top row always blank - rule that level generator will need to obey
+                        {
+                            tiles[idx] = 78;
+                        }
+                        else
+                        {
+                            if ('#' == data[idx]) // Current tile
+                            {
+                                walls[idx] |= 0x0020;
+                            }
+
+                            if (0 == col) // first column
+                            {
+                                walls[idx] |= 0x444;
+                                if ('#' == data[idx - lvl_width]) // N
+                                {
+                                    walls[idx] |= 0x0200;
+                                }
+                                if ('#' == data[idx - lvl_width + 1]) // NE
+                                {
+                                    walls[idx] |= 0x0100;
+                                }
+                                if ('#' == data[idx + 1]) // E
+                                {
+                                    walls[idx] |= 0x0010;
+                                }
+                                if (((lvl_height - 1) > row))
+                                {
+                                    if ('#' == data[idx + lvl_width]) // S
+                                    {
+                                        walls[idx] |= 0x0002;
+                                    }
+                                    if ('#' == data[idx + lvl_width + 1]) // SE
+                                    {
+                                        walls[idx] |= 0x0001;
+                                    }
+                                }
+                            }
+                            else if ((lvl_width - 1) == col) // last column
+                            {
+                                walls[idx] |= 0x111;
+                                if ('#' == data[idx - lvl_width]) // N
+                                {
+                                    walls[idx] |= 0x0200;
+                                }
+                                if ('#' == data[idx - lvl_width - 1]) // NW
+                                {
+                                    walls[idx] |= 0x0400;
+                                }
+                                if ('#' == data[idx - 1]) // W
+                                {
+                                    walls[idx] |= 0x0040;
+                                }
+                                if (((lvl_height - 1) > row))
+                                {
+                                    if ('#' == data[idx + lvl_width]) // S
+                                    {
+                                        walls[idx] |= 0x0002;
+                                    }
+                                    if ('#' == data[idx + lvl_width - 1]) // SW
+                                    {
+                                        walls[idx] |= 0x0004;
+                                    }
+                                }
+                            }
+                            else // everywhere else
+                            {
+                                if ('#' == data[idx - lvl_width - 1]) // NW
+                                {
+                                    walls[idx] |= 0x0400;
+                                }
+                                if ('#' == data[idx - lvl_width]) // N
+                                {
+                                    walls[idx] |= 0x0200;
+                                }
+                                if ('#' == data[idx - lvl_width + 1]) // NE
+                                {
+                                    walls[idx] |= 0x0100;
+                                }
+                                if ('#' == data[idx - 1]) // W
+                                {
+                                    walls[idx] |= 0x0040;
+                                }
+                                if ('#' == data[idx + 1]) // E
+                                {
+                                    walls[idx] |= 0x0010;
+                                }
+                                if (((lvl_height - 1) > row))
+                                {
+                                    if ('#' == data[idx + lvl_width - 1]) // SW
+                                    {
+                                        walls[idx] |= 0x0004;
+                                    }
+                                    if ('#' == data[idx + lvl_width]) // S
+                                    {
+                                        walls[idx] |= 0x0002;
+                                    }
+                                    if ('#' == data[idx + lvl_width + 1]) // SE
+                                    {
+                                        walls[idx] |= 0x0001;
+                                    }
+                                }
+                        }
+
+                            if (0x0777 == walls[idx])
+                            {
+                                tiles[idx] = 78;
+                            }
+                            else if (walls[idx] & 0x0020)
+                            {
+                                switch (walls[idx])
+                                {
+                                case 0x747: // Top Left
+                                case 0x744:
+                                    tiles[idx] = 0;
+                                    break;
+                                case 0x666: // Left
+                                case 0x667:
+                                case 0x760:
+                                    tiles[idx] = 10 + 10 * (idx % 2);
+                                    break;
+                                case 0x670: // Bottom Left
+                                case 0x671:
+                                case 0x672:
+                                case 0x673:
+                                case 0x674:
+                                case 0x675:
+                                case 0x676:
+                                case 0x677:
+                                    tiles[idx] = 40;
+                                    break;
+                                case 0x470: // Bottom
+                                case 0x471:
+                                case 0x472:
+                                case 0x473:
+                                case 0x474:
+                                case 0x475:
+                                case 0x476:
+                                case 0x477:
+                                case 0x170:
+                                case 0x171:
+                                case 0x172:
+                                case 0x173:
+                                case 0x174:
+                                case 0x175:
+                                case 0x176:
+                                case 0x177:
+                                case 0x070:
+                                case 0x071:
+                                case 0x072:
+                                case 0x073:
+                                case 0x074:
+                                case 0x075:
+                                case 0x076:
+                                case 0x077:
+                                    tiles[idx] = 41;
+                                    break;
+                                case 0x570: // Bottom Right
+                                case 0x571:
+                                case 0x572:
+                                case 0x573:
+                                case 0x574:
+                                case 0x575:
+                                case 0x576:
+                                case 0x577:
+                                case 0x370:
+                                    tiles[idx] = 45;
+                                    break;
+                                case 0x555: // Right
+                                case 0x337:
+                                case 0x517:
+                                    tiles[idx] = 15 + 10 * (idx % 2);
+                                    break;
+                                case 0x757: // Top Right
+                                case 0x756:
+                                case 0x754:
+                                case 0x751:
+                                case 0x750:
+                                case 0x763:
+                                    tiles[idx] = 0;
+                                    break;
+                                case 0x770:
+                                case 0x771:
+                                case 0x774:
+                                    tiles[idx] = 78;
+                                    break;
+                                
+                                default:
+                                    tiles[idx] = 69;
+                                    break;
+                                }
+                            }
+                            else
+                            {
+                                tiles[idx] = 79;
+                            }
+                        }
                     }
                 }
             }
@@ -118,43 +335,43 @@ const Color colours[] =
 };
 
 const uint16_t tile_size = 16u;
-const char *world = "############################################################"
-                    "#..........################..........####......#############"
-                    "#................................................###########"
-                    "#..........#################.....................###########"
-                    "#.....@....##################..................#############"
-                    "#..........################.....................C###########"
-                    "#..........################..E...................###########"
-                    "#..........##################..................####........#"
-                    "#..............############....................####.######.#"
-                    "##############.................................####.######.#"
-                    "##############.#############...................#....#####..#"
-                    "#######............###########...................########.##"
-                    "#####..............##########....................#######..##"
-                    "######.............#############................########.###"
-                    "#####..............################...........####.C.##...##"
-                    "#####C.............##################..###########...##..###"
-                    "#####..............##################..########..........#C#"
-                    "########...........##################..######............#.#"
-                    "######...............####..........##..######..............#"
-                    "#####......####..............####......######E.............#"
-                    "#####################################..######..............#"
-                    "#####################################..#########...........#"
-                    "##.............#################..........#######..........#"
-                    "##.......E.....#########....................#####..........#"
-                    "##.............#########.................C....##########.###"
-                    "##............................................##########.###"
-                    "##X............#########....................############.###"
-                    "##.....E.......##########.................######....####.###"
-                    "##.............###########E..............#######.##.####.###"
-                    "####.##########################.################.##.####.###"
-                    "####.#########....C......#####.....#######.......##......###"
-                    "####.##...................####..................############"
-                    "####.##.#####.............####...................###########"
-                    "####.##.#####.............####................##############"
-                    "####.##.#####..............................#################"
-                    "####....#######...E....##########..C..######################"
-                    "############################################################";
+char *world =   "############################################################"
+                "#..........################..........####......#############"
+                "#................................................###########"
+                "#..........#################.....................###########"
+                "#..........##################..................#############"
+                "#.@........################.....................C###########"
+                "#..........################..E...................###########"
+                "#..........##################..................####........#"
+                "#..............############....................####.######.#"
+                "##############.................................####.######.#"
+                "##############.#############...................#....#####..#"
+                "#######............###########...................########.##"
+                "#####..............##########....................#######..##"
+                "######.............#############................########.###"
+                "#####..............################...........####.C.##...##"
+                "#####C.............##################..###########...##..###"
+                "#####..............##################..########..........#C#"
+                "########...........##################..######............#.#"
+                "######...............####..........##..######..............#"
+                "#####......####..............####......######E.............#"
+                "#####################################..######..............#"
+                "#####################################..#########...........#"
+                "##.............#################..........#######..........#"
+                "##.......E.....#########....................#####..........#"
+                "##.............#########.................C....##########.###"
+                "##............................................##########.###"
+                "##X............#########....................############.###"
+                "##.....E.......##########.................######....####.###"
+                "##.............###########E..............#######.##.####.###"
+                "####.##########################.################.##.####.###"
+                "####.#########....C......#####.....#######.......##......###"
+                "####.##...................####..................############"
+                "####.##.#####.............####...................###########"
+                "####.##.#####.............####................##############"
+                "####.##.#####..............................#################"
+                "####....#######...E....##########..C..######################"
+                "############################################################";
 
 char hiddn[] =  "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH"
                 "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH"
@@ -327,6 +544,8 @@ int main(void)
     std::vector<Enemy> enemies;
     Level              level;
 
+    level.load(world, 60, 37);
+
     InitWindow(screenWidth, screenHeight, "Banroks Adventure");
 
     Texture2D tex_tileset;
@@ -347,6 +566,9 @@ int main(void)
 
     printf("world_width: %d\n", world_width);
     printf("world_height: %d\n", world_height);
+
+    printf("level_width: %d\n", level.width);
+    printf("level_height: %d\n", level.height);
 
     bool start_processed = false;
     bool running         = true;
@@ -456,34 +678,30 @@ int main(void)
 
             ClearBackground(colours[0]);
 
-            for (size_t y = 0; y < world_height; y++)
+            for (size_t y = 0; y < level.height; y++)
             {
-                for (size_t x = 0; x < world_width; x++)
+                for (size_t x = 0; x < level.width; x++)
                 {
-                    char tile = world[x + y * world_width];
-                    if ('#' == tile) // wall
-                    {
-                        draw_tile_from_set(tex_tileset, 78, tile_size, x, y, 2.0f);
-                    }
-                    else if ('X' == tile) // exit
+                    char raw = level.raw[x + y * level.width];
+                    
+                    printf("tile-id = %d, WALL:=0x%03x\n", level.tiles[x + y * level.width], level.walls[x + y * level.width]);
+
+                    draw_tile_from_set(tex_tileset, level.tiles[x + y * level.width], tile_size, x, y, 2.0f);
+                    if ('X' == raw) // exit
                     {
                         draw_tile_from_set(tex_tileset, player.hasKey ? 39 : 38, tile_size, x, y, 2.0f);
-                    }
-                    else // floor
-                    {
-                        draw_tile_from_set(tex_tileset, x % 2 ? 22 : 23, tile_size, x, y, 2.0f);
                     }
                     
                     if (!start_processed)
                     {
-                        if ('@' == tile) // player start pos
+                        if ('@' == raw) // player start pos
                         {
                             player.x = x;
                             player.y = y;
 
                             printf("player at {%u, %u}\r\n", x, y);
                         }
-                        else if ('E' == tile) // enemy
+                        else if ('E' == raw) // enemy
                         {
                             Enemy fresh_enemy;
                             fresh_enemy.x = x;
@@ -495,7 +713,7 @@ int main(void)
 
                             printf("total enemies now %u\r\n", enemies.size());
                         }
-                        else if ('C' == tile) // chest
+                        else if ('C' == raw) // chest
                         {
                             Chest fresh_chest;
                             fresh_chest.x = x;
@@ -529,7 +747,7 @@ int main(void)
                 {
                     if(!chest.opened)
                     {
-                        DrawRectangle(chest.x * tile_size * window_scale, chest.y * tile_size * window_scale, tile_size * window_scale, tile_size * window_scale, colours[9]);
+                        draw_tile_from_set(tex_tileset, 85, tile_size, chest.x, chest.y, 2.0f);
                     }
                 }
 
