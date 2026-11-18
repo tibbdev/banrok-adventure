@@ -229,6 +229,8 @@ struct Level
                                 {
                                 case 0x747: // Top Left
                                 case 0x744:
+                                case 0x766:
+                                case 0x740:
                                     tiles[idx] = 0;
                                     break;
                                 case 0x666: // Left
@@ -294,7 +296,8 @@ struct Level
                                 case 0x751:
                                 case 0x750:
                                 case 0x763:
-                                    tiles[idx] = 0;
+                                case 0x710:
+                                    tiles[idx] = 5;
                                     break;
                                 case 0x770:
                                 case 0x771:
@@ -309,7 +312,43 @@ struct Level
                             }
                             else
                             {
-                                tiles[idx] = 79;
+                                switch (walls[idx])
+                                {
+                                    case 0x740:
+                                    case 0x741:
+                                    case 0x742:
+                                    case 0x743:
+                                    case 0x744:
+                                    case 0x745:
+                                    case 0x746:
+                                    case 0x747:
+                                        tiles[idx] = 1;
+                                        break;
+                                    case 0x710:
+                                    case 0x711:
+                                    case 0x712:
+                                    case 0x713:
+                                    case 0x714:
+                                    case 0x715:
+                                    case 0x716:
+                                    case 0x717:
+                                        tiles[idx] = 4;
+                                        break;
+                                    case 0x700:
+                                    case 0x701:
+                                    case 0x702:
+                                    case 0x703:
+                                    case 0x704:
+                                    case 0x705:
+                                    case 0x706:
+                                    case 0x707:
+                                        tiles[idx] = ((rand() % 8) == 0) ? 2 : 1;
+                                        break;
+
+                                    default:
+                                        tiles[idx] = 79;
+                                        break;
+                                }
                             }
                         }
                     }
