@@ -680,6 +680,7 @@ int main(void)
 
             for (size_t y = 0; y < level.height; y++)
             {
+                printf("row #%03d\n", y);
                 for (size_t x = 0; x < level.width; x++)
                 {
                     char raw = level.raw[x + y * level.width];
