@@ -806,7 +806,7 @@ int main(void)
         {
             int32_t y = player.y + y_off;
 
-            if ((0 >= y) | (world_height < y))
+            if ((0 >= y) | (level.height < y))
             {
                 continue;
             }
@@ -815,16 +815,16 @@ int main(void)
             {
                 int32_t x = player.x + x_off;
 
-                if ((0 >= x) | (world_width < x))
+                if ((0 > x) | (level.width < x))
                 {
                     continue;
                 }
 
                 int16_t distance = (x_off * x_off) + (y_off * y_off);
 
-                if (40 > distance)
+                if (32 > distance)
                 {
-                    hiddn[player.x + x_off + (player.y + y_off)*world_width] = ' ';
+                    hiddn[player.x + x_off + (player.y + y_off)*level.width] = ' ';
                 }
             }
         }
@@ -935,11 +935,11 @@ int main(void)
             
             if (fog_of_war)
             {
-                for (size_t y = 0; y < world_height; y++)
+                for (size_t y = 0; y < level.height; y++)
                 {
-                    for (size_t x = 0; x < world_width; x++)
+                    for (size_t x = 0; x < level.width; x++)
                     {
-                        char tile = hiddn[x + y * world_width];
+                        char tile = hiddn[x + y * level.width];
                         if ('H' == tile) // hidden
                         {
                             DrawRectangle(x * tile_size * window_scale, y * tile_size * window_scale, tile_size * window_scale, tile_size * window_scale, colours[1]);
