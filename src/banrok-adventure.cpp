@@ -22,6 +22,8 @@ struct Player
     uint16_t x      = 0;
     uint16_t y      = 0;
     uint16_t health = 100;
+    uint16_t coin   = 0;
+    uint16_t potion = 0;
     bool     alive  = true;
     bool     hasKey = false;
 
@@ -909,7 +911,7 @@ int main(void)
                 {
                     if(!chest.opened)
                     {
-                        draw_tile_from_set(tex_tileset, chest.containsKey ? 80 : 85, tile_size, chest.x, chest.y, 2.0f);
+                        draw_tile_from_set(tex_tileset, chest.containsKey ? 84 : 85, tile_size, chest.x, chest.y, 2.0f);
                     }
                 }
 
@@ -925,6 +927,10 @@ int main(void)
                 }
 
                 DrawRectangle(player.x * tile_size * window_scale, player.y * tile_size * window_scale, tile_size * window_scale, tile_size * window_scale, player.hasKey ? colours[7] : RED);
+                if (player.hasKey)
+                { 
+                    draw_tile_from_set(tex_tileset, 99, tile_size, (world_width / window_scale) - 1, 0, 2.0f);
+                }
             }
             
             if (fog_of_war)
