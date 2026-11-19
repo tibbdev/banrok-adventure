@@ -230,12 +230,20 @@ struct Level
                                 case 0x747: // Top Left
                                 case 0x744:
                                 case 0x766:
+                                case 0x767:
                                 case 0x740:
-                                    tiles[idx] = 0;
-                                    break;
-                                case 0x666: // Left
-                                case 0x667:
                                 case 0x760:
+                                    tiles[idx] = 0;
+                                    break; 
+                                case 0x660: // Left
+                                case 0x661:
+                                case 0x662:
+                                case 0x663:
+                                case 0x664:
+                                case 0x665:
+                                case 0x666:
+                                case 0x667:
+                                case 0x764:
                                     tiles[idx] = 10 + 10 * (idx % 2);
                                     break;
                                 case 0x670: // Bottom Left
@@ -283,10 +291,25 @@ struct Level
                                 case 0x576:
                                 case 0x577:
                                 case 0x370:
+                                case 0x371:
+                                case 0x372:
+                                case 0x373:
+                                case 0x374:
+                                case 0x375:
+                                case 0x376:
+                                case 0x377:
                                     tiles[idx] = 45;
                                     break;
                                 case 0x555: // Right
+                                case 0x330:
+                                case 0x331:
+                                case 0x332:
+                                case 0x333:
+                                case 0x334:
+                                case 0x335:
+                                case 0x336:
                                 case 0x337:
+                                case 0x737:
                                 case 0x517:
                                     tiles[idx] = 15 + 10 * (idx % 2);
                                     break;
@@ -296,12 +319,43 @@ struct Level
                                 case 0x751:
                                 case 0x750:
                                 case 0x763:
-                                case 0x710:
+                                case 0x730:
+                                case 0x733:
+                                case 0x731:
                                     tiles[idx] = 5;
+                                    break;
+                                case 0x033:
+                                case 0x030:
+                                case 0x133:
+                                case 0x130:
+                                case 0x131:
+                                case 0x136:
+                                case 0x137:
+                                    tiles[idx] = 54;
+                                    break;
+                                case 0x037:
+                                    tiles[idx] = 50;
+                                    break;
+                                case 0x067:
+                                case 0x467:
+                                case 0x466:
+                                    tiles[idx] = 53;
+                                    break;
+                                case 0x460:
+                                case 0x464:
+                                case 0x060:
+                                case 0x064:
+                                case 0x066:
+                                    tiles[idx] = 55;
                                     break;
                                 case 0x770:
                                 case 0x771:
+                                case 0x772:
+                                case 0x773:
                                 case 0x774:
+                                case 0x775:
+                                case 0x776:
+                                case 0x777:
                                     tiles[idx] = 78;
                                     break;
                                 
@@ -322,6 +376,8 @@ struct Level
                                     case 0x745:
                                     case 0x746:
                                     case 0x747:
+                                    case 0x300:
+                                    case 0x313:
                                         tiles[idx] = 1;
                                         break;
                                     case 0x710:
@@ -332,17 +388,66 @@ struct Level
                                     case 0x715:
                                     case 0x716:
                                     case 0x717:
+                                    case 0x701:
+                                    case 0x310:
+                                    case 0x755:
                                         tiles[idx] = 4;
                                         break;
-                                    case 0x700:
-                                    case 0x701:
                                     case 0x702:
                                     case 0x703:
                                     case 0x704:
                                     case 0x705:
                                     case 0x706:
+                                    case 0x311:
+                                    case 0x317:
+                                    case 0x301:
+                                    case 0x302:
+                                    case 0x303:
+                                    case 0x304:
+                                    case 0x305:
+                                    case 0x306:
+                                    case 0x307:
+                                    case 0x201:
+                                    case 0x202:
+                                    case 0x203:
+                                    case 0x204:
+                                    case 0x205:
+                                    case 0x206:
+                                    case 0x207:
+                                    case 0x600:
+                                        tiles[idx] = 3;
+                                        break;
                                     case 0x707:
-                                        tiles[idx] = ((rand() % 8) == 0) ? 2 : 1;
+                                    case 0x601:
+                                    case 0x602:
+                                    case 0x603:
+                                    case 0x604:
+                                    case 0x605:
+                                    case 0x606:
+                                    case 0x607:
+                                    case 0x644:
+                                    case 0x645:
+                                    case 0x647:
+                                    case 0x320:
+                                    case 0x700:
+                                        tiles[idx] = 2;
+                                        break;
+                                    case 0x200:
+                                    case 0x500:
+                                        tiles[idx] = 22;
+                                        break;
+                                    case 0x501:
+                                    case 0x504:
+                                        tiles[idx] = 7;
+                                        break;
+                                    case 0x502:
+                                    case 0x503:
+                                        tiles[idx] = 8;
+                                        break;
+                                    case 0x505:
+                                    case 0x506:
+                                    case 0x507:
+                                        tiles[idx] = 27;
                                         break;
 
                                     default:
@@ -375,25 +480,25 @@ const Color colours[] =
 
 const uint16_t tile_size = 16u;
 char *world =   "############################################################"
-                "#..........################..........####......#############"
-                "#................................................###########"
-                "#..........#################.....................###########"
+                "##C########################..........####E.....#############"
+                "#...#####........................................###########"
+                "#....####..#################.....................###########"
                 "#..........##################..................#############"
                 "#.@........################.....................C###########"
                 "#..........################..E...................###########"
-                "#..........##################..................####........#"
-                "#..............############....................####.######.#"
-                "##############.................................####.######.#"
-                "##############.#############...................#....#####..#"
+                "#####......##################..................####........#"
+                "#####..........############....................####.######.#"
+                "##############...............................######.######.#"
+                "##############.#############.................###....#####..#"
                 "#######............###########...................########.##"
-                "#####..............##########....................#######..##"
-                "######.............#############................########.###"
-                "#####..............################...........####.C.##...##"
-                "#####C.............##################..###########...##..###"
-                "#####..............##################..########..........#C#"
-                "########...........##################..######............#.#"
+                "#####E.............#######.......................#######..##"
+                "######.............#####......##................########.###"
+                "#####..............#####.##.C.#####...........####.C.##...##"
+                "#####C.............#####.############..###########...##.####"
+                "#####....................############..########.........##C#"
+                "########...........##################..######...........##.#"
                 "######...............####..........##..######..............#"
-                "#####......####..............####......######E.............#"
+                "#####.C....#########.........####......######E.............#"
                 "#####################################..######..............#"
                 "#####################################..#########...........#"
                 "##.............#################..........#######..........#"
@@ -406,7 +511,7 @@ char *world =   "############################################################"
                 "####.##########################.################.##.####.###"
                 "####.#########....C......#####.....#######.......##......###"
                 "####.##...................####..................############"
-                "####.##.#####.............####...................###########"
+                "####.##.#####.............####..................E###########"
                 "####.##.#####.............####................##############"
                 "####.##.#####..............................#################"
                 "####....#######...E....##########..C..######################"
@@ -450,13 +555,13 @@ char hiddn[] =  "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH"
                 "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH"
                 "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH";
 
-void handle_player_movement(Player &player, std::vector<Enemy> &enemies, std::vector<Chest> &chests, uint16_t world_width)
+void handle_player_movement(Player &player, std::vector<Enemy> &enemies, Level &level, uint16_t world_width)
 {
+    const uint16_t wall = level.walls[player.x + player.y * level.width];
+
     if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP))
     {
-        uint16_t check_idx = (player.y - 1) * world_width + player.x;
-
-        if ('#' != world[check_idx]) // if it's not a wall you might be able to move
+        if (!(0x200 & wall)) // if it's not a wall you might be able to move
         {
             bool enemy_blocking = false;
 
@@ -478,7 +583,7 @@ void handle_player_movement(Player &player, std::vector<Enemy> &enemies, std::ve
     }
     if (IsKeyPressed(KEY_S) || IsKeyPressed(KEY_DOWN))
     {
-        if ('#' != world[(player.y + 1) * world_width + player.x])
+        if (!(0x002 & wall))
         {
             bool enemy_blocking = false;
 
@@ -501,7 +606,7 @@ void handle_player_movement(Player &player, std::vector<Enemy> &enemies, std::ve
     
     if (IsKeyPressed(KEY_A) || IsKeyPressed(KEY_LEFT))
     {
-        if ('#' != world[player.y * world_width + (player.x - 1)])
+        if (!(0x040 & wall))
         {
             bool enemy_blocking = false;
             uint16_t enemy_idx = 0;
@@ -524,7 +629,7 @@ void handle_player_movement(Player &player, std::vector<Enemy> &enemies, std::ve
     }
     if (IsKeyPressed(KEY_D) || IsKeyPressed(KEY_RIGHT))
     {
-        if ('#' != world[player.y * world_width + (player.x + 1)])
+        if (!(0x010 & wall))
         {
             bool enemy_blocking = false;
 
@@ -576,7 +681,9 @@ void draw_tile_from_set(Texture2D tex, uint16_t tileid, uint16_t tilesize, uint1
 int main(void)
 {
     // Setup
-    uint32_t score = 0;
+    uint32_t score   = 0;
+    bool dbg_overlay = true;
+    bool dbg_nbor    = false;
 
     Player             player;
     std::vector<Chest> chests;
@@ -619,7 +726,7 @@ int main(void)
     // Enter Game Loop
     while (running && !WindowShouldClose())    // Detect window close button or ESC key
     {
-        if('X' == world[player.x + world_width * player.y]) // Is player at exit?
+        if('X' == level.raw[player.x + level.width * player.y]) // Is player at exit?
         {
             if (player.hasKey)
             {
@@ -632,11 +739,19 @@ int main(void)
         {
             fog_of_war = !fog_of_war;
         }
+        if (IsKeyPressed(KEY_N)) // Toggle debug info on/off
+        {
+            dbg_overlay = !dbg_overlay;
+        }
+        if (IsKeyPressed(KEY_M)) // Toggle neighbour info on/off
+        {
+            dbg_nbor = !dbg_nbor;
+        }
 
         // Update
         if (start_processed)
         {
-            handle_player_movement(player, enemies, chests, world_width);
+            handle_player_movement(player, enemies, level, level.width);
 
             int enemy_within_range = enemies.size();
             uint16_t enemy_idx = 0;
@@ -719,17 +834,24 @@ int main(void)
 
             for (size_t y = 0; y < level.height; y++)
             {
-                printf("row #%03d\n", y);
+                // printf("row #%03d\n", y);
                 for (size_t x = 0; x < level.width; x++)
                 {
                     char raw = level.raw[x + y * level.width];
                     
-                    printf("tile-id = %d, WALL:=0x%03x\n", level.tiles[x + y * level.width], level.walls[x + y * level.width]);
+                    // printf("tile-id = %d, WALL:=0x%03x\n", level.tiles[x + y * level.width], level.walls[x + y * level.width]);
 
                     draw_tile_from_set(tex_tileset, level.tiles[x + y * level.width], tile_size, x, y, 2.0f);
                     if ('X' == raw) // exit
                     {
                         draw_tile_from_set(tex_tileset, player.hasKey ? 39 : 38, tile_size, x, y, 2.0f);
+                    }
+
+                    if (dbg_nbor)
+                    {
+                        char dbg_nbor_str[8] = "";
+                        sprintf(dbg_nbor_str, "%03x", level.walls[x + y * level.width]);
+                        DrawText(dbg_nbor_str, x * tile_size * window_scale, y * tile_size * window_scale, 8, GRAY);
                     }
                     
                     if (!start_processed)
@@ -787,7 +909,7 @@ int main(void)
                 {
                     if(!chest.opened)
                     {
-                        draw_tile_from_set(tex_tileset, 85, tile_size, chest.x, chest.y, 2.0f);
+                        draw_tile_from_set(tex_tileset, chest.containsKey ? 80 : 85, tile_size, chest.x, chest.y, 2.0f);
                     }
                 }
 
@@ -827,6 +949,13 @@ int main(void)
             char health_str[21] = "";
             sprintf(health_str, "HEALTH : %u", player.health);
             DrawText(health_str, 200 * window_scale, 2 * window_scale, 12 * window_scale, colours[7]);
+
+            if (dbg_overlay)
+            {
+                char dbg_overlay_str[21] = "";
+                sprintf(dbg_overlay_str, "player x.y := {%d,%d} walls:0x%03x - %u", player.x, player.y, level.walls[player.x + player.y * level.width], player.x + player.y * level.width);
+                DrawText(dbg_overlay_str, 400 * window_scale, 2 * window_scale, 12 * window_scale, GREEN);
+            }
 
         EndDrawing();
     }
