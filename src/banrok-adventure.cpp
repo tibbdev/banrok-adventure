@@ -10,6 +10,8 @@
 #include <vector>
 #include <array>
 
+constexpr uint16_t WORLD_BUFFER_SIZE = 16 * 1024;
+
 const int screenWidth = 800;
 const int screenHeight = 480;
 
@@ -78,13 +80,13 @@ struct Level
 {
     uint16_t width       = 0;
     uint16_t height      = 0;
-    uint8_t  tiles[4096] = {0};
-    uint16_t walls[4096] = {0};
-    char     raw[4096]   = {0};
+    uint8_t  tiles[WORLD_BUFFER_SIZE] = {0};
+    uint16_t walls[WORLD_BUFFER_SIZE] = {0};
+    char     raw[WORLD_BUFFER_SIZE]   = {0};
 
     void clear(void)
     {
-        for (int idx = 0; idx < 4096; idx++)
+        for (int idx = 0; idx < WORLD_BUFFER_SIZE; idx++)
         {
             tiles[idx] = 78;  // All blank
             raw[idx]   = '#';
@@ -93,6 +95,364 @@ struct Level
 
         width  = 0;
         height = 0;
+    }
+
+    void process_raw_data(void)
+    {
+        memset(tiles, 78, sizeof(tiles));
+        
+        for (uint16_t row = 0; row < height; row++)
+        {
+            for (uint16_t col = 0; col < width; col++)
+            {
+                uint16_t idx = row * width + col;                        
+                
+                walls[idx] = 0u;
+
+                if (0 == row) // Top row always blank - rule that level generator will need to obey
+                {
+                    tiles[idx] = 78;
+                }
+                else
+                {
+                    if ('#' == raw[idx]) // Current tile
+                    {
+                        walls[idx] |= 0x0020;
+                    }
+
+                    if (0 == col) // first column
+                    {
+                        walls[idx] |= 0x444;
+                        if ('#' == raw[idx - width]) // N
+                        {
+                            walls[idx] |= 0x0200;
+                        }
+                        if ('#' == raw[idx - width + 1]) // NE
+                        {
+                            walls[idx] |= 0x0100;
+                        }
+                        if ('#' == raw[idx + 1]) // E
+                        {
+                            walls[idx] |= 0x0010;
+                        }
+                        if (((height - 1) > row))
+                        {
+                            if ('#' == raw[idx + width]) // S
+                            {
+                                walls[idx] |= 0x0002;
+                            }
+                            if ('#' == raw[idx + width + 1]) // SE
+                            {
+                                walls[idx] |= 0x0001;
+                            }
+                        }
+                    }
+                    else if ((width - 1) == col) // last column
+                    {
+                        walls[idx] |= 0x111;
+                        if ('#' == raw[idx - width]) // N
+                        {
+                            walls[idx] |= 0x0200;
+                        }
+                        if ('#' == raw[idx - width - 1]) // NW
+                        {
+                            walls[idx] |= 0x0400;
+                        }
+                        if ('#' == raw[idx - 1]) // W
+                        {
+                            walls[idx] |= 0x0040;
+                        }
+                        if (((height - 1) > row))
+                        {
+                            if ('#' == raw[idx + width]) // S
+                            {
+                                walls[idx] |= 0x0002;
+                            }
+                            if ('#' == raw[idx + width - 1]) // SW
+                            {
+                                walls[idx] |= 0x0004;
+                            }
+                        }
+                    }
+                    else // everywhere else
+                    {
+                        if ('#' == raw[idx - width - 1]) // NW
+                        {
+                            walls[idx] |= 0x0400;
+                        }
+                        if ('#' == raw[idx - width]) // N
+                        {
+                            walls[idx] |= 0x0200;
+                        }
+                        if ('#' == raw[idx - width + 1]) // NE
+                        {
+                            walls[idx] |= 0x0100;
+                        }
+                        if ('#' == raw[idx - 1]) // W
+                        {
+                            walls[idx] |= 0x0040;
+                        }
+                        if ('#' == raw[idx + 1]) // E
+                        {
+                            walls[idx] |= 0x0010;
+                        }
+                        if (((height - 1) > row))
+                        {
+                            if ('#' == raw[idx + width - 1]) // SW
+                            {
+                                walls[idx] |= 0x0004;
+                            }
+                            if ('#' == raw[idx + width]) // S
+                            {
+                                walls[idx] |= 0x0002;
+                            }
+                            if ('#' == raw[idx + width + 1]) // SE
+                            {
+                                walls[idx] |= 0x0001;
+                            }
+                        }
+                }
+
+                    if (0x0777 == walls[idx])
+                    {
+                        tiles[idx] = 78;
+                    }
+                    else if (walls[idx] & 0x0020)
+                    {
+                        switch (walls[idx])
+                        {
+                        case 0x747: // Top Left
+                        case 0x744:
+                        case 0x766:
+                        case 0x767:
+                        case 0x740:
+                        case 0x760:
+                            tiles[idx] = 0;
+                            break; 
+                        case 0x660: // Left
+                        case 0x661:
+                        case 0x662:
+                        case 0x663:
+                        case 0x664:
+                        case 0x665:
+                        case 0x666:
+                        case 0x667:
+                        case 0x764:
+                            tiles[idx] = 10 + 10 * (idx % 2);
+                            break;
+                        case 0x670: // Bottom Left
+                        case 0x671:
+                        case 0x672:
+                        case 0x673:
+                        case 0x674:
+                        case 0x675:
+                        case 0x676:
+                        case 0x677:
+                            tiles[idx] = 40;
+                            break;
+                        case 0x470: // Bottom
+                        case 0x471:
+                        case 0x472:
+                        case 0x473:
+                        case 0x474:
+                        case 0x475:
+                        case 0x476:
+                        case 0x477:
+                        case 0x170:
+                        case 0x171:
+                        case 0x172:
+                        case 0x173:
+                        case 0x174:
+                        case 0x175:
+                        case 0x176:
+                        case 0x177:
+                        case 0x070:
+                        case 0x071:
+                        case 0x072:
+                        case 0x073:
+                        case 0x074:
+                        case 0x075:
+                        case 0x076:
+                        case 0x077:
+                            tiles[idx] = 41;
+                            break;
+                        case 0x570: // Bottom Right
+                        case 0x571:
+                        case 0x572:
+                        case 0x573:
+                        case 0x574:
+                        case 0x575:
+                        case 0x576:
+                        case 0x577:
+                        case 0x370:
+                        case 0x371:
+                        case 0x372:
+                        case 0x373:
+                        case 0x374:
+                        case 0x375:
+                        case 0x376:
+                        case 0x377:
+                            tiles[idx] = 45;
+                            break;
+                        case 0x555: // Right
+                        case 0x330:
+                        case 0x331:
+                        case 0x332:
+                        case 0x333:
+                        case 0x334:
+                        case 0x335:
+                        case 0x336:
+                        case 0x337:
+                        case 0x737:
+                        case 0x517:
+                            tiles[idx] = 15 + 10 * (idx % 2);
+                            break;
+                        case 0x757: // Top Right
+                        case 0x756:
+                        case 0x754:
+                        case 0x751:
+                        case 0x750:
+                        case 0x763:
+                        case 0x730:
+                        case 0x733:
+                        case 0x731:
+                            tiles[idx] = 5;
+                            break;
+                        case 0x033:
+                        case 0x030:
+                        case 0x133:
+                        case 0x130:
+                        case 0x131:
+                        case 0x136:
+                        case 0x137:
+                            tiles[idx] = 54;
+                            break;
+                        case 0x037:
+                            tiles[idx] = 50;
+                            break;
+                        case 0x067:
+                        case 0x467:
+                        case 0x466:
+                            tiles[idx] = 53;
+                            break;
+                        case 0x460:
+                        case 0x464:
+                        case 0x060:
+                        case 0x064:
+                        case 0x066:
+                            tiles[idx] = 55;
+                            break;
+                        case 0x770:
+                        case 0x771:
+                        case 0x772:
+                        case 0x773:
+                        case 0x774:
+                        case 0x775:
+                        case 0x776:
+                        case 0x777:
+                            tiles[idx] = 78;
+                            break;
+                        
+                        default:
+                            tiles[idx] = 69;
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        switch (walls[idx])
+                        {
+                            case 0x740:
+                            case 0x741:
+                            case 0x742:
+                            case 0x743:
+                            case 0x744:
+                            case 0x745:
+                            case 0x746:
+                            case 0x747:
+                            case 0x300:
+                            case 0x313:
+                                tiles[idx] = 1;
+                                break;
+                            case 0x710:
+                            case 0x711:
+                            case 0x712:
+                            case 0x713:
+                            case 0x714:
+                            case 0x715:
+                            case 0x716:
+                            case 0x717:
+                            case 0x701:
+                            case 0x310:
+                            case 0x755:
+                                tiles[idx] = 4;
+                                break;
+                            case 0x702:
+                            case 0x703:
+                            case 0x704:
+                            case 0x705:
+                            case 0x706:
+                            case 0x311:
+                            case 0x317:
+                            case 0x301:
+                            case 0x302:
+                            case 0x303:
+                            case 0x304:
+                            case 0x305:
+                            case 0x306:
+                            case 0x307:
+                            case 0x201:
+                            case 0x202:
+                            case 0x203:
+                            case 0x204:
+                            case 0x205:
+                            case 0x206:
+                            case 0x207:
+                            case 0x600:
+                                tiles[idx] = 3;
+                                break;
+                            case 0x707:
+                            case 0x601:
+                            case 0x602:
+                            case 0x603:
+                            case 0x604:
+                            case 0x605:
+                            case 0x606:
+                            case 0x607:
+                            case 0x644:
+                            case 0x645:
+                            case 0x647:
+                            case 0x320:
+                            case 0x700:
+                            case 0x750:
+                                tiles[idx] = 2;
+                                break;
+                            case 0x200:
+                            case 0x500:
+                                tiles[idx] = 22;
+                                break;
+                            case 0x501:
+                            case 0x504:
+                                tiles[idx] = 7;
+                                break;
+                            case 0x502:
+                            case 0x503:
+                                tiles[idx] = 8;
+                                break;
+                            case 0x505:
+                            case 0x506:
+                            case 0x507:
+                                tiles[idx] = 27;
+                                break;
+
+                            default:
+                                tiles[idx] = 79;
+                                break;
+                        }
+                    }
+                }
+            }
+        }
     }
 
     void load(char * data, uint16_t lvl_width, uint16_t lvl_height)
@@ -114,357 +474,154 @@ struct Level
                         uint16_t idx = row * lvl_width + col;
                         
                         raw[idx] = data[idx];
-                        
-                        walls[idx] = 0u;
+                    }
+                }
+                process_raw_data();
+            }
+        }
+    }
 
-                        if (0 == row) // Top row always blank - rule that level generator will need to obey
+    void generate(uint16_t lvl_width, uint16_t lvl_height)
+    {
+        memset(raw, '#', sizeof(raw[0] * WORLD_BUFFER_SIZE));
+
+        if (sizeof(tiles) > (lvl_width * lvl_height))
+        {
+            width  = lvl_width;
+            height = lvl_height;
+
+            printf("generating level!\r\n");
+            
+            for (uint8_t round = 0; round < 3; round++)
+            {
+                printf("Round %d!\r\n", round + 1);
+
+                if (0 == round)
+                {
+                    uint16_t chance = rand() % 5;
+
+                    for (uint16_t row = 0; lvl_height > row ; row++)
+                    {
+                        for (uint16_t col = 0; lvl_width > col ; col++)
                         {
-                            tiles[idx] = 78;
+                            uint16_t idx = row * lvl_width + col;
+                            
+                            raw[idx] = '#';
+                            
+                            chance = rand() % 1000;
+                            if (500 <= chance)
+                            {
+                                raw[idx] = '.';
+                            }
+                            printf("%c", raw[idx]);
                         }
-                        else
+                        printf("\r\n");
+                    }
+                }
+                else
+                {
+                    for (uint16_t row = 0; lvl_height > row ; row++)
+                    {
+                        for (uint16_t col = 0; lvl_width > col ; col++)
                         {
-                            if ('#' == data[idx]) // Current tile
+                            uint16_t idx = row * lvl_width + col;
+                            if ( (row == 0) || (row == (lvl_height - 1)) ||
+                                 (col == 0) || (col == (lvl_width - 1)) )
                             {
-                                walls[idx] |= 0x0020;
-                            }
-
-                            if (0 == col) // first column
-                            {
-                                walls[idx] |= 0x444;
-                                if ('#' == data[idx - lvl_width]) // N
-                                {
-                                    walls[idx] |= 0x0200;
-                                }
-                                if ('#' == data[idx - lvl_width + 1]) // NE
-                                {
-                                    walls[idx] |= 0x0100;
-                                }
-                                if ('#' == data[idx + 1]) // E
-                                {
-                                    walls[idx] |= 0x0010;
-                                }
-                                if (((lvl_height - 1) > row))
-                                {
-                                    if ('#' == data[idx + lvl_width]) // S
-                                    {
-                                        walls[idx] |= 0x0002;
-                                    }
-                                    if ('#' == data[idx + lvl_width + 1]) // SE
-                                    {
-                                        walls[idx] |= 0x0001;
-                                    }
-                                }
-                            }
-                            else if ((lvl_width - 1) == col) // last column
-                            {
-                                walls[idx] |= 0x111;
-                                if ('#' == data[idx - lvl_width]) // N
-                                {
-                                    walls[idx] |= 0x0200;
-                                }
-                                if ('#' == data[idx - lvl_width - 1]) // NW
-                                {
-                                    walls[idx] |= 0x0400;
-                                }
-                                if ('#' == data[idx - 1]) // W
-                                {
-                                    walls[idx] |= 0x0040;
-                                }
-                                if (((lvl_height - 1) > row))
-                                {
-                                    if ('#' == data[idx + lvl_width]) // S
-                                    {
-                                        walls[idx] |= 0x0002;
-                                    }
-                                    if ('#' == data[idx + lvl_width - 1]) // SW
-                                    {
-                                        walls[idx] |= 0x0004;
-                                    }
-                                }
-                            }
-                            else // everywhere else
-                            {
-                                if ('#' == data[idx - lvl_width - 1]) // NW
-                                {
-                                    walls[idx] |= 0x0400;
-                                }
-                                if ('#' == data[idx - lvl_width]) // N
-                                {
-                                    walls[idx] |= 0x0200;
-                                }
-                                if ('#' == data[idx - lvl_width + 1]) // NE
-                                {
-                                    walls[idx] |= 0x0100;
-                                }
-                                if ('#' == data[idx - 1]) // W
-                                {
-                                    walls[idx] |= 0x0040;
-                                }
-                                if ('#' == data[idx + 1]) // E
-                                {
-                                    walls[idx] |= 0x0010;
-                                }
-                                if (((lvl_height - 1) > row))
-                                {
-                                    if ('#' == data[idx + lvl_width - 1]) // SW
-                                    {
-                                        walls[idx] |= 0x0004;
-                                    }
-                                    if ('#' == data[idx + lvl_width]) // S
-                                    {
-                                        walls[idx] |= 0x0002;
-                                    }
-                                    if ('#' == data[idx + lvl_width + 1]) // SE
-                                    {
-                                        walls[idx] |= 0x0001;
-                                    }
-                                }
-                        }
-
-                            if (0x0777 == walls[idx])
-                            {
-                                tiles[idx] = 78;
-                            }
-                            else if (walls[idx] & 0x0020)
-                            {
-                                switch (walls[idx])
-                                {
-                                case 0x747: // Top Left
-                                case 0x744:
-                                case 0x766:
-                                case 0x767:
-                                case 0x740:
-                                case 0x760:
-                                    tiles[idx] = 0;
-                                    break; 
-                                case 0x660: // Left
-                                case 0x661:
-                                case 0x662:
-                                case 0x663:
-                                case 0x664:
-                                case 0x665:
-                                case 0x666:
-                                case 0x667:
-                                case 0x764:
-                                    tiles[idx] = 10 + 10 * (idx % 2);
-                                    break;
-                                case 0x670: // Bottom Left
-                                case 0x671:
-                                case 0x672:
-                                case 0x673:
-                                case 0x674:
-                                case 0x675:
-                                case 0x676:
-                                case 0x677:
-                                    tiles[idx] = 40;
-                                    break;
-                                case 0x470: // Bottom
-                                case 0x471:
-                                case 0x472:
-                                case 0x473:
-                                case 0x474:
-                                case 0x475:
-                                case 0x476:
-                                case 0x477:
-                                case 0x170:
-                                case 0x171:
-                                case 0x172:
-                                case 0x173:
-                                case 0x174:
-                                case 0x175:
-                                case 0x176:
-                                case 0x177:
-                                case 0x070:
-                                case 0x071:
-                                case 0x072:
-                                case 0x073:
-                                case 0x074:
-                                case 0x075:
-                                case 0x076:
-                                case 0x077:
-                                    tiles[idx] = 41;
-                                    break;
-                                case 0x570: // Bottom Right
-                                case 0x571:
-                                case 0x572:
-                                case 0x573:
-                                case 0x574:
-                                case 0x575:
-                                case 0x576:
-                                case 0x577:
-                                case 0x370:
-                                case 0x371:
-                                case 0x372:
-                                case 0x373:
-                                case 0x374:
-                                case 0x375:
-                                case 0x376:
-                                case 0x377:
-                                    tiles[idx] = 45;
-                                    break;
-                                case 0x555: // Right
-                                case 0x330:
-                                case 0x331:
-                                case 0x332:
-                                case 0x333:
-                                case 0x334:
-                                case 0x335:
-                                case 0x336:
-                                case 0x337:
-                                case 0x737:
-                                case 0x517:
-                                    tiles[idx] = 15 + 10 * (idx % 2);
-                                    break;
-                                case 0x757: // Top Right
-                                case 0x756:
-                                case 0x754:
-                                case 0x751:
-                                case 0x750:
-                                case 0x763:
-                                case 0x730:
-                                case 0x733:
-                                case 0x731:
-                                    tiles[idx] = 5;
-                                    break;
-                                case 0x033:
-                                case 0x030:
-                                case 0x133:
-                                case 0x130:
-                                case 0x131:
-                                case 0x136:
-                                case 0x137:
-                                    tiles[idx] = 54;
-                                    break;
-                                case 0x037:
-                                    tiles[idx] = 50;
-                                    break;
-                                case 0x067:
-                                case 0x467:
-                                case 0x466:
-                                    tiles[idx] = 53;
-                                    break;
-                                case 0x460:
-                                case 0x464:
-                                case 0x060:
-                                case 0x064:
-                                case 0x066:
-                                    tiles[idx] = 55;
-                                    break;
-                                case 0x770:
-                                case 0x771:
-                                case 0x772:
-                                case 0x773:
-                                case 0x774:
-                                case 0x775:
-                                case 0x776:
-                                case 0x777:
-                                    tiles[idx] = 78;
-                                    break;
-                                
-                                default:
-                                    tiles[idx] = 69;
-                                    break;
-                                }
+                                raw[idx] = '#';
                             }
                             else
                             {
-                                switch (walls[idx])
-                                {
-                                    case 0x740:
-                                    case 0x741:
-                                    case 0x742:
-                                    case 0x743:
-                                    case 0x744:
-                                    case 0x745:
-                                    case 0x746:
-                                    case 0x747:
-                                    case 0x300:
-                                    case 0x313:
-                                        tiles[idx] = 1;
-                                        break;
-                                    case 0x710:
-                                    case 0x711:
-                                    case 0x712:
-                                    case 0x713:
-                                    case 0x714:
-                                    case 0x715:
-                                    case 0x716:
-                                    case 0x717:
-                                    case 0x701:
-                                    case 0x310:
-                                    case 0x755:
-                                        tiles[idx] = 4;
-                                        break;
-                                    case 0x702:
-                                    case 0x703:
-                                    case 0x704:
-                                    case 0x705:
-                                    case 0x706:
-                                    case 0x311:
-                                    case 0x317:
-                                    case 0x301:
-                                    case 0x302:
-                                    case 0x303:
-                                    case 0x304:
-                                    case 0x305:
-                                    case 0x306:
-                                    case 0x307:
-                                    case 0x201:
-                                    case 0x202:
-                                    case 0x203:
-                                    case 0x204:
-                                    case 0x205:
-                                    case 0x206:
-                                    case 0x207:
-                                    case 0x600:
-                                        tiles[idx] = 3;
-                                        break;
-                                    case 0x707:
-                                    case 0x601:
-                                    case 0x602:
-                                    case 0x603:
-                                    case 0x604:
-                                    case 0x605:
-                                    case 0x606:
-                                    case 0x607:
-                                    case 0x644:
-                                    case 0x645:
-                                    case 0x647:
-                                    case 0x320:
-                                    case 0x700:
-                                    case 0x750:
-                                        tiles[idx] = 2;
-                                        break;
-                                    case 0x200:
-                                    case 0x500:
-                                        tiles[idx] = 22;
-                                        break;
-                                    case 0x501:
-                                    case 0x504:
-                                        tiles[idx] = 7;
-                                        break;
-                                    case 0x502:
-                                    case 0x503:
-                                        tiles[idx] = 8;
-                                        break;
-                                    case 0x505:
-                                    case 0x506:
-                                    case 0x507:
-                                        tiles[idx] = 27;
-                                        break;
+                                uint8_t neighbouring_wall_cnt = 0;
 
-                                    default:
-                                        tiles[idx] = 79;
-                                        break;
+                                // printf("idx %d [%c]", idx, raw[idx]);
+
+                                for (int16_t y = -1; 1 >= y; y++ )
+                                {
+                                    for (int16_t x = -1; 1 >= x; x++ )
+                                    {
+                                        uint16_t test_idx = idx + (y * lvl_width + x);
+                                        
+                                        // printf(" test-idx:=%d [%c]", test_idx, raw[test_idx]);
+                                        if (idx != test_idx)
+                                        {
+                                            if (raw[test_idx] == '#')
+                                            {
+                                                neighbouring_wall_cnt++;
+                                            }
+                                        }                                        
+                                    }
+                                }
+
+                                // printf(" %d\n", neighbouring_wall_cnt);
+
+                                if (raw[idx] == '#')
+                                {
+                                    if (2 > neighbouring_wall_cnt)
+                                    {
+                                        raw[idx] = '.';
+                                    }
+                                }
+                                else
+                                {
+                                    if (5 > neighbouring_wall_cnt)
+                                    {
+                                        raw[idx] = '#';
+                                    }
                                 }
                             }
                         }
                     }
                 }
             }
+
+            printf("generation complete... finding starting point!\r\n");
+
+            uint32_t start_x = 0, start_y = 0, exit_x = 100, exit_y = 100;
+
+            do
+            {
+                start_x = (rand() % lvl_width) / 2;
+                start_y = (rand() % lvl_height) / 2;
+            } while (raw[start_y * lvl_width + start_x] == '#');
+
+            raw[start_y * lvl_width + start_x] = '@';
+            raw[start_y * lvl_width + start_x + 1] = '.';
+            raw[start_y * lvl_width + start_x + 2] = '.';
+            raw[start_y * lvl_width + start_x + 3] = '.';
+            raw[start_y * lvl_width + start_x + 4] = '.';
+            raw[(start_y + 1) * lvl_width + start_x + 4] = '.';
+            raw[(start_y + 2) * lvl_width + start_x + 4] = '.';
+            raw[(start_y + 3) * lvl_width + start_x + 4] = '.';
+            raw[(start_y + 4) * lvl_width + start_x + 4] = '.';
+
+            printf("generation complete... finding exit point!\r\n");
+
+            do
+            {
+                exit_x = lvl_width / 3;
+                exit_y = lvl_height / 3;
+                exit_x += (rand() % lvl_width) / 2;
+                exit_y += (rand() % lvl_height) / 2;
+            } while (raw[exit_y * lvl_width + exit_x] == '#');
+
+            raw[exit_y * lvl_width + exit_x] = 'X';
+            
+            for (uint16_t row = 0; lvl_height > row ; row++)
+            {
+                for (uint16_t col = 0; lvl_width > col ; col++)
+                {
+                    uint16_t idx = row * lvl_width + col;
+
+                    printf("%c", raw[idx]);                        
+                }
+                
+                printf("\r\n");
+            }
+
+            process_raw_data();
         }
     }
-
 };
 
 const Color colours[] =
@@ -702,7 +859,7 @@ int main(void)
     std::vector<Enemy> enemies;
     Level              level;
 
-    level.load(world, 60, 37);
+    // level.load(world, 60, 37);
 
     InitWindow(screenWidth, screenHeight, "Banroks Adventure");
 
@@ -724,8 +881,10 @@ int main(void)
     
     SetTargetFPS(30);               // Set our game to run at 30 frames-per-second for that retro lifestyle
 
-    uint16_t world_width  = GetScreenWidth() / (tile_size);
-    uint16_t world_height = GetScreenHeight() / (tile_size);
+    uint16_t world_width  = (GetScreenWidth() / window_scale) / (tile_size);
+    uint16_t world_height = (GetScreenHeight() / window_scale) / (tile_size);
+
+    level.generate(world_width, world_height);
 
     printf("world_width: %d\n", world_width);
     printf("world_height: %d\n", world_height);
