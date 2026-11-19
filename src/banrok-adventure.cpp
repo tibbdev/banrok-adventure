@@ -432,6 +432,7 @@ struct Level
                                     case 0x647:
                                     case 0x320:
                                     case 0x700:
+                                    case 0x750:
                                         tiles[idx] = 2;
                                         break;
                                     case 0x200:
@@ -519,7 +520,7 @@ char *world =   "############################################################"
                 "####....#######...E....##########..C..######################"
                 "############################################################";
 
-char hiddn[] =  "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH"
+char hiddn[] =  "                                                            "
                 "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH"
                 "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH"
                 "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH"
@@ -559,7 +560,7 @@ char hiddn[] =  "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH"
 
 void handle_player_movement(Player &player, std::vector<Enemy> &enemies, Level &level, uint16_t world_width)
 {
-    const uint16_t wall = level.walls[player.x + player.y * level.width];
+    uint16_t wall = level.walls[player.x + player.y * level.width];
 
     if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP))
     {
@@ -583,6 +584,9 @@ void handle_player_movement(Player &player, std::vector<Enemy> &enemies, Level &
             }
         }
     }
+
+    wall = level.walls[player.x + player.y * level.width];
+
     if (IsKeyPressed(KEY_S) || IsKeyPressed(KEY_DOWN))
     {
         if (!(0x002 & wall))
@@ -605,6 +609,8 @@ void handle_player_movement(Player &player, std::vector<Enemy> &enemies, Level &
             }
         }
     }
+
+    wall = level.walls[player.x + player.y * level.width];
     
     if (IsKeyPressed(KEY_A) || IsKeyPressed(KEY_LEFT))
     {
@@ -629,6 +635,9 @@ void handle_player_movement(Player &player, std::vector<Enemy> &enemies, Level &
             }
         }
     }
+
+    wall = level.walls[player.x + player.y * level.width];
+
     if (IsKeyPressed(KEY_D) || IsKeyPressed(KEY_RIGHT))
     {
         if (!(0x010 & wall))
@@ -649,6 +658,7 @@ void handle_player_movement(Player &player, std::vector<Enemy> &enemies, Level &
                 player.x++;
             }
         }
+        return;
     }
 }
 
@@ -697,10 +707,15 @@ int main(void)
     InitWindow(screenWidth, screenHeight, "Banroks Adventure");
 
     Texture2D tex_tileset;
+    Texture2D tex_characters;
 
     {
         Image img = LoadImage(ASSETS_PATH "2DPixelDungeon/character and tileset/Dungeon_Tileset.png");
         tex_tileset = LoadTextureFromImage(img);
+        UnloadImage(img);
+        img = LoadImage(ASSETS_PATH "2DPixelDungeon/character and tileset/Dungeon_Character_2.png");
+        tex_characters = LoadTextureFromImage(img);
+        UnloadImage(img);
     }
 
     ToggleFullscreen();
@@ -831,7 +846,7 @@ int main(void)
         
         // Draw
         BeginDrawing();
-
+        {
             ClearBackground(colours[0]);
 
             for (size_t y = 0; y < level.height; y++)
@@ -920,13 +935,18 @@ int main(void)
                 {
                     if (enemy.isAlive)
                     {
-                        DrawRectangle(enemy.x * tile_size * window_scale, enemy.y * tile_size * window_scale, tile_size * window_scale, tile_size * window_scale, colours[8]);
+                        draw_tile_from_set(tex_characters, 9, tile_size, enemy.x, enemy.y, 2.0f);
+                    }
+                    else
+                    {
+                        draw_tile_from_set(tex_tileset, 68, tile_size, enemy.x, enemy.y, 2.0f);
                     }
                     
                     enemy_idx++;
                 }
 
-                DrawRectangle(player.x * tile_size * window_scale, player.y * tile_size * window_scale, tile_size * window_scale, tile_size * window_scale, player.hasKey ? colours[7] : RED);
+                draw_tile_from_set(tex_characters, player.hasKey ? 2 : 1, tile_size, player.x, player.y, 2.0f);
+                // DrawRectangle(player.x * tile_size * window_scale, player.y * tile_size * window_scale, tile_size * window_scale, tile_size * window_scale, player.hasKey ? colours[7] : RED);
                 if (player.hasKey)
                 { 
                     draw_tile_from_set(tex_tileset, 99, tile_size, (world_width / window_scale) - 1, 0, 2.0f);
@@ -962,7 +982,7 @@ int main(void)
                 sprintf(dbg_overlay_str, "player x.y := {%d,%d} walls:0x%03x - %u", player.x, player.y, level.walls[player.x + player.y * level.width], player.x + player.y * level.width);
                 DrawText(dbg_overlay_str, 400 * window_scale, 2 * window_scale, 12 * window_scale, GREEN);
             }
-
+        }
         EndDrawing();
     }
 
