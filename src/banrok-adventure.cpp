@@ -217,7 +217,7 @@ struct Level
                     {
                         tiles[idx] = 78;
                     }
-                    else if (walls[idx] & 0x0020)
+                    else if (walls[idx] & 0x0020) // I am a wall...
                     {
                         switch (walls[idx])
                         {
@@ -360,7 +360,58 @@ struct Level
                     }
                     else
                     {
-                        switch (walls[idx])
+                        if(walls[idx] & 0x0200) // wall above
+                        {
+                            uint16_t selection = rand() % 6;
+
+                            switch(selection)
+                            {
+                                case 0:
+                                case 1:
+                                    selection = 0;
+                                case 2:
+                                case 3:
+                                    selection = 1;
+                                    break;
+                                case 4:
+                                    selection = 2;
+                                    break;
+                                case 5:
+                                    selection = 3;
+                                    break;
+
+                                default:
+                                    selection = 0;
+                                    break;
+                            }
+                            tiles[idx] = 1 + selection;
+                        }
+                        else if(walls[idx] & 0x0002) // wall below
+                        {
+                            uint16_t selection = rand() % 6;
+
+                            switch(selection)
+                            {
+                                case 0:
+                                case 1:
+                                case 2:
+                                case 3:
+                                case 4:
+                                    selection = 1;
+                                    break;
+                                case 5:
+                                    selection = 0;
+                                    break;
+
+                                default:
+                                    selection = 0;
+                                    break;
+                            }
+                            tiles[idx] = 22 + selection;
+                        }
+                        else
+                        {
+                            switch (walls[idx])
                         {
                             case 0x740:
                             case 0x741:
@@ -449,6 +500,7 @@ struct Level
                                 tiles[idx] = 79;
                                 break;
                         }
+                        }
                     }
                 }
             }
@@ -481,7 +533,7 @@ struct Level
         }
     }
 
-    void generate(uint16_t lvl_width, uint16_t lvl_height)
+    void generate(uint16_t lvl_width, uint16_t lvl_height, uint8_t chests_cnt, uint8_t enemy_cnt, uint8_t potion_cnt)
     {
         memset(raw, '#', sizeof(raw[0] * WORLD_BUFFER_SIZE));
 
@@ -492,7 +544,7 @@ struct Level
 
             printf("generating level!\r\n");
             
-            for (uint8_t round = 0; round < 3; round++)
+            for (uint8_t round = 0; round < 10; round++)
             {
                 printf("Round %d!\r\n", round + 1);
 
@@ -513,9 +565,7 @@ struct Level
                             {
                                 raw[idx] = '.';
                             }
-                            printf("%c", raw[idx]);
                         }
-                        printf("\r\n");
                     }
                 }
                 else
@@ -535,6 +585,21 @@ struct Level
                                 uint8_t neighbouring_wall_cnt = 0;
 
                                 // printf("idx %d [%c]", idx, raw[idx]);
+
+                                if (raw[idx] == '#')
+                                {
+                                    if ((raw[idx - 1] == '.') && (raw[idx + 1] == '.'))
+                                    {
+                                        raw[idx + 1] = (0 == rand()) ? '.' : '#';
+                                    }
+                                }
+                                else
+                                {
+                                    if ((raw[idx - 1] == '#') && (raw[idx + 1] == '#'))
+                                    {
+                                        raw[idx + 1] = (0 == rand()) ? '.' : '#';
+                                    }
+                                }
 
                                 for (int16_t y = -1; 1 >= y; y++ )
                                 {
@@ -557,21 +622,62 @@ struct Level
 
                                 if (raw[idx] == '#')
                                 {
-                                    if (2 > neighbouring_wall_cnt)
+                                    if (4 > neighbouring_wall_cnt)
                                     {
                                         raw[idx] = '.';
                                     }
                                 }
                                 else
                                 {
-                                    if (5 > neighbouring_wall_cnt)
+                                    if (5 < neighbouring_wall_cnt)
                                     {
                                         raw[idx] = '#';
+                                    }
+                                }
+                                
+                                if (raw[idx] == '#')
+                                {
+                                    if ((raw[idx - 1] == '.') && (raw[idx + 1] == '.'))
+                                    {
+                                        if ((0 == rand()))
+                                        {
+                                            raw[idx + 1] = '#';
+                                        }
+                                        else 
+                                        {
+                                            raw[idx] = '.';
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    if ((raw[idx - 1] == '#') && (raw[idx + 1] == '#'))
+                                    {
+                                        if ((0 == rand()))
+                                        {
+                                            raw[idx + 1] = '.';
+                                        }
+                                        else 
+                                        {
+                                            raw[idx] = '#';
+                                        }
                                     }
                                 }
                             }
                         }
                     }
+                }
+                
+                for (uint16_t row = 0; lvl_height > row ; row++)
+                {
+                    for (uint16_t col = 0; lvl_width > col ; col++)
+                    {
+                        uint16_t idx = row * lvl_width + col;
+
+                        printf("%c", raw[idx]);                        
+                    }
+                    
+                    printf("\r\n");
                 }
             }
 
@@ -585,15 +691,24 @@ struct Level
                 start_y = (rand() % lvl_height) / 2;
             } while (raw[start_y * lvl_width + start_x] == '#');
 
-            raw[start_y * lvl_width + start_x] = '@';
-            raw[start_y * lvl_width + start_x + 1] = '.';
-            raw[start_y * lvl_width + start_x + 2] = '.';
-            raw[start_y * lvl_width + start_x + 3] = '.';
-            raw[start_y * lvl_width + start_x + 4] = '.';
-            raw[(start_y + 1) * lvl_width + start_x + 4] = '.';
-            raw[(start_y + 2) * lvl_width + start_x + 4] = '.';
-            raw[(start_y + 3) * lvl_width + start_x + 4] = '.';
-            raw[(start_y + 4) * lvl_width + start_x + 4] = '.';
+            {
+                uint16_t idx = start_y * lvl_width + start_x;
+
+                for (int16_t y = -2; 2 >= y; y++ )
+                {
+                    for (int16_t x = -2; 2 >= x; x++ )
+                    {
+                        if ((y + start_y > 1) && (x + start_x > 1))
+                        {
+                            uint16_t test_idx = idx + (y * lvl_width + x);
+                            
+                            raw[test_idx] = 0 < rand() % 3 ? raw[test_idx] : '.';
+                        }                                        
+                    }
+                }
+                
+                raw[start_y * lvl_width + start_x] = '@';
+            }
 
             printf("generation complete... finding exit point!\r\n");
 
@@ -605,7 +720,40 @@ struct Level
                 exit_y += (rand() % lvl_height) / 2;
             } while (raw[exit_y * lvl_width + exit_x] == '#');
 
-            raw[exit_y * lvl_width + exit_x] = 'X';
+            {
+                uint16_t idx = exit_y * lvl_width + exit_x;
+
+                for (int16_t y = -2; 2 >= y; y++ )
+                {
+                    for (int16_t x = -2; 2 >= x; x++ )
+                    {
+                        if ((y + start_y > 1) && (x + start_x > 1))
+                        {
+                            uint16_t test_idx = idx + (y * lvl_width + x);
+                            
+                            raw[test_idx] = 0 < rand() % 3 ? raw[test_idx] : '.';
+                        }                                        
+                    }
+                }
+                
+                raw[idx] = 'X';
+            }
+
+            for (size_t chest_id = 0; chest_id < chests_cnt; chest_id++)
+            {                
+                uint32_t chest_x = 0, chest_y = 0;
+                
+                do
+                {
+                    chest_x = lvl_width / (chests_cnt / 2);
+                    chest_y = lvl_height / (chests_cnt / 2);
+                    chest_x += (rand() % lvl_width) / (chests_cnt / 2);
+                    chest_y += (rand() % lvl_height) / (chests_cnt / 2);
+                } while (raw[chest_y * lvl_width + chest_x] != '.');
+                
+                raw[chest_y * lvl_width + chest_x] = 'C';
+            }
+            
             
             for (uint16_t row = 0; lvl_height > row ; row++)
             {
@@ -884,7 +1032,8 @@ int main(void)
     uint16_t world_width  = (GetScreenWidth() / window_scale) / (tile_size);
     uint16_t world_height = (GetScreenHeight() / window_scale) / (tile_size);
 
-    level.generate(world_width, world_height);
+    
+    level.generate(world_width, world_height, 5, 2, 1);
 
     printf("world_width: %d\n", world_width);
     printf("world_height: %d\n", world_height);
@@ -896,6 +1045,7 @@ int main(void)
     bool running         = true;
     bool fog_of_war      = false;
     bool key_assigned    = false;
+    uint16_t this_level = 0;
     
     uint64_t last_attack_attempt = (uint64_t)GetTime();
 
@@ -906,9 +1056,16 @@ int main(void)
         {
             if (player.hasKey)
             {
-                running = false;
-                continue;
+                this_level++;
+                level.generate(world_width, world_height, 5, 1.3f * (this_level + 1), 1 + this_level * 0.5f);
+                start_processed = false;
             }
+        }
+
+        if (!player.alive)
+        {
+            running = false;
+            continue;
         }
 
         if (IsKeyPressed(KEY_F)) // Toggle fog of war on/off
